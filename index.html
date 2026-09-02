@@ -1,0 +1,2154 @@
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TimeBox</title>
+
+<style>
+:root{
+  --accent:#1677ff;
+  --accent2:#0d5bd7;
+  --bg:#eef3f8;
+  --card:#fff;
+  --text:#111;
+  --muted:#68707c;
+  --line:#dfe4ea;
+  --current:#000;
+  --currentText:#fff;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html,body{
+  margin:0;
+  min-height:100%;
+  font-family:
+    Arial,
+    "Noto Sans JP",
+    sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+body.dark{
+  --bg:#0d0f12;
+  --card:#181b20;
+  --text:#fff;
+  --muted:#9aa2ad;
+  --line:#30343b;
+}
+
+/* HEADER */
+
+.app{
+  width:100%;
+  max-width:1200px;
+  margin:auto;
+  padding:18px;
+}
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:16px;
+}
+
+.logo{
+  font-size:25px;
+  font-weight:800;
+}
+
+.logo span{
+  color:var(--accent);
+}
+
+.header-buttons{
+  display:flex;
+  gap:8px;
+}
+
+button{
+  border:0;
+  background:var(--card);
+  color:var(--text);
+  border-radius:12px;
+  padding:11px 14px;
+  cursor:pointer;
+  font-size:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.05);
+}
+
+button:hover{
+  transform:translateY(-1px);
+}
+
+.primary{
+  background:var(--accent);
+  color:#fff;
+}
+
+/* NAV */
+
+nav{
+  display:flex;
+  gap:7px;
+  overflow-x:auto;
+  padding-bottom:12px;
+}
+
+nav button{
+  white-space:nowrap;
+}
+
+nav button.active{
+  background:var(--accent);
+  color:#fff;
+}
+
+/* PAGE */
+
+.page{
+  display:none;
+}
+
+.page.active{
+  display:block;
+}
+
+/* CLOCK */
+
+.clock-card{
+  background:var(--card);
+  border-radius:25px;
+  padding:50px 20px;
+  text-align:center;
+}
+
+.clock-time{
+  font-size:clamp(55px,12vw,125px);
+  font-weight:800;
+  letter-spacing:2px;
+}
+
+.clock-date{
+  margin-top:10px;
+  color:var(--muted);
+  font-size:19px;
+}
+
+.remaining{
+  margin-top:25px;
+  color:var(--muted);
+}
+
+.info-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:15px;
+  margin-top:15px;
+}
+
+.card{
+  background:var(--card);
+  border-radius:20px;
+  padding:20px;
+}
+
+/* BIG TIMER */
+
+.big-number{
+  font-size:65px;
+  font-weight:800;
+  text-align:center;
+  margin:35px 0;
+}
+
+.controls{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+input,select{
+  border:1px solid var(--line);
+  background:var(--card);
+  color:var(--text);
+  border-radius:10px;
+  padding:11px;
+}
+
+/* SCHEDULE */
+
+.schedule-top{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:var(--bg);
+  padding:5px 0 12px;
+}
+
+.week-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.week-title h2{
+  margin:5px 0;
+}
+
+.schedule-scroll{
+  height:calc(100vh - 210px);
+  min-height:500px;
+  overflow-y:auto;
+  border-radius:20px;
+  background:var(--card);
+  box-shadow:0 2px 10px rgba(0,0,0,.06);
+}
+
+.day-block{
+  border-bottom:1px solid var(--line);
+}
+
+.day-header{
+  position:sticky;
+  top:0;
+  z-index:10;
+  padding:13px 15px;
+  background:var(--card);
+  border-bottom:1px solid var(--line);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.day-name{
+  font-weight:800;
+  font-size:17px;
+}
+
+.day-date{
+  color:var(--muted);
+  font-size:13px;
+}
+
+.timeline{
+  position:relative;
+  min-height:1440px;
+  margin-left:65px;
+}
+
+.hour{
+  height:60px;
+  position:relative;
+  border-bottom:1px solid var(--line);
+}
+
+.hour-label{
+  position:absolute;
+  left:-65px;
+  top:-9px;
+  width:55px;
+  text-align:right;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.hour.current-hour{
+  background:var(--current);
+  color:var(--currentText);
+}
+
+.hour.current-hour .hour-label{
+  color:#fff;
+}
+
+.current-line{
+  position:absolute;
+  left:0;
+  right:0;
+  height:3px;
+  background:var(--accent);
+  z-index:8;
+  box-shadow:0 0 7px rgba(0,0,0,.25);
+}
+
+.current-dot{
+  position:absolute;
+  left:-6px;
+  top:-4px;
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  background:var(--accent);
+}
+
+/* EVENTS */
+
+.event{
+  position:absolute;
+  left:7px;
+  right:7px;
+  border-radius:10px;
+  padding:7px 9px;
+  background:var(--accent);
+  color:#fff;
+  overflow:hidden;
+  cursor:pointer;
+  z-index:6;
+  box-shadow:0 3px 8px rgba(0,0,0,.15);
+}
+
+.event-title{
+  font-weight:800;
+  font-size:13px;
+}
+
+.event-time{
+  font-size:11px;
+  opacity:.85;
+  margin-top:2px;
+}
+
+.add-day{
+  margin-left:10px;
+  padding:7px 10px;
+}
+
+/* WORLD CLOCK */
+
+.world-list{
+  display:grid;
+  gap:10px;
+  margin-top:15px;
+}
+
+.world{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:15px;
+  border-radius:13px;
+  background:var(--bg);
+}
+
+.world-time{
+  font-size:22px;
+  font-weight:800;
+}
+
+/* ALARM */
+
+.alarm-list{
+  display:grid;
+  gap:10px;
+  margin-top:15px;
+}
+
+.alarm{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:15px;
+  border-radius:14px;
+  background:var(--bg);
+}
+
+.alarm-time{
+  font-size:25px;
+  font-weight:800;
+}
+
+/* LAPS */
+
+.laps{
+  max-height:250px;
+  overflow:auto;
+  margin-top:15px;
+}
+
+.lap{
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+  border-bottom:1px solid var(--line);
+}
+
+/* THEME */
+
+.theme-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(110px,1fr));
+  gap:10px;
+  margin-top:15px;
+}
+
+.theme{
+  padding:18px 10px;
+  border-radius:15px;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+  text-align:center;
+}
+
+.theme.blue{background:#1677ff}
+.theme.purple{background:#7b4dff}
+.theme.green{background:#16a36a}
+.theme.orange{background:#f27b22}
+.theme.red{background:#e53935}
+.theme.pink{background:#e84d9b}
+.theme.cyan{background:#00a8c6}
+
+/* MODAL */
+
+.modal-bg{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:100;
+  background:rgba(0,0,0,.55);
+  align-items:center;
+  justify-content:center;
+  padding:15px;
+}
+
+.modal-bg.show{
+  display:flex;
+}
+
+.modal{
+  width:100%;
+  max-width:430px;
+  background:var(--card);
+  border-radius:22px;
+  padding:22px;
+}
+
+.modal h2{
+  margin-top:0;
+}
+
+.form{
+  display:grid;
+  gap:10px;
+}
+
+.form label{
+  font-size:13px;
+  color:var(--muted);
+}
+
+.form input{
+  width:100%;
+}
+
+.modal-buttons{
+  display:flex;
+  gap:8px;
+  margin-top:15px;
+}
+
+.modal-buttons button{
+  flex:1;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:600px){
+
+  .app{
+    padding:10px;
+  }
+
+  header{
+    margin-bottom:8px;
+  }
+
+  .logo{
+    font-size:21px;
+  }
+
+  .clock-card{
+    padding:35px 10px;
+  }
+
+  .big-number{
+    font-size:50px;
+  }
+
+  .schedule-scroll{
+    height:calc(100vh - 190px);
+  }
+
+  .timeline{
+    margin-left:52px;
+  }
+
+  .hour-label{
+    left:-52px;
+    width:43px;
+    font-size:11px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+  <div class="logo">⏰ <span>TimeBox</span></div>
+
+  <div class="header-buttons">
+    <button onclick="toggleDark()">🌙</button>
+    <button class="primary" onclick="openEventModal()">＋ 予定</button>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="showPage('clock',this)">時計</button>
+  <button onclick="showPage('schedule',this)">📅 予定</button>
+  <button onclick="showPage('timer',this)">⏳ タイマー</button>
+  <button onclick="showPage('stopwatch',this)">⏱️ ストップウォッチ</button>
+  <button onclick="showPage('alarm',this)">⏰ アラーム</button>
+  <button onclick="showPage('world',this)">🌍 世界時計</button>
+  <button onclick="showPage('settings',this)">⚙️ 設定</button>
+</nav>
+
+
+<!-- ================= 時計 ================= -->
+
+<section id="clock" class="page active">
+
+  <div class="clock-card">
+
+    <div class="clock-time" id="mainTime">
+      00:00:00
+    </div>
+
+    <div class="clock-date" id="mainDate">
+      ----
+    </div>
+
+    <div class="remaining" id="remaining">
+      今日の残り時間：--
+    </div>
+
+  </div>
+
+  <div class="info-grid">
+
+    <div class="card">
+      <h3>📅 今日</h3>
+      <p id="todayInfo">---</p>
+    </div>
+
+    <div class="card">
+      <h3>📊 今日の進行</h3>
+      <p id="dayProgress">0%</p>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ================= 予定 ================= -->
+
+<section id="schedule" class="page">
+
+  <div class="schedule-top">
+
+    <div class="week-title">
+
+      <div>
+        <h2>📅 週間スケジュール</h2>
+        <div id="weekRange"></div>
+      </div>
+
+      <div class="controls">
+        <button onclick="changeWeek(-1)">← 前週</button>
+        <button onclick="goCurrentWeek()">今日</button>
+        <button onclick="changeWeek(1)">次週 →</button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="schedule-scroll" id="scheduleScroll"></div>
+
+</section>
+
+
+<!-- ================= タイマー ================= -->
+
+<section id="timer" class="page">
+
+  <div class="card">
+
+    <h2>⏳ タイマー</h2>
+
+    <div class="big-number" id="timerDisplay">
+      05:00
+    </div>
+
+    <div class="controls">
+      <button onclick="setTimer(60)">1分</button>
+      <button onclick="setTimer(300)">5分</button>
+      <button onclick="setTimer(600)">10分</button>
+      <button onclick="setTimer(1800)">30分</button>
+      <button onclick="setTimer(3600)">1時間</button>
+    </div>
+
+    <br>
+
+    <div class="controls">
+
+      <input
+        id="timerMin"
+        type="number"
+        min="0"
+        placeholder="分"
+      >
+
+      <input
+        id="timerSec"
+        type="number"
+        min="0"
+        max="59"
+        placeholder="秒"
+      >
+
+      <button onclick="customTimer()">
+        設定
+      </button>
+
+    </div>
+
+    <br>
+
+    <div class="controls">
+      <button class="primary" onclick="startTimer()">▶ スタート</button>
+      <button onclick="pauseTimer()">⏸ 一時停止</button>
+      <button onclick="resetTimer()">↩ リセット</button>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ================= ストップウォッチ ================= -->
+
+<section id="stopwatch" class="page">
+
+  <div class="card">
+
+    <h2>⏱️ ストップウォッチ</h2>
+
+    <div class="big-number" id="stopwatchDisplay">
+      00:00.00
+    </div>
+
+    <div class="controls">
+      <button class="primary" onclick="startStopwatch()">▶ スタート</button>
+      <button onclick="pauseStopwatch()">⏸ 一時停止</button>
+      <button onclick="lapStopwatch()">🏁 ラップ</button>
+      <button onclick="resetStopwatch()">↩ リセット</button>
+    </div>
+
+    <div class="laps" id="laps"></div>
+
+  </div>
+
+</section>
+
+
+<!-- ================= アラーム ================= -->
+
+<section id="alarm" class="page">
+
+  <div class="card">
+
+    <h2>⏰ アラーム</h2>
+
+    <div class="controls">
+
+      <input id="alarmTime" type="time">
+
+      <button class="primary" onclick="addAlarm()">
+        ＋ 追加
+      </button>
+
+    </div>
+
+    <div class="alarm-list" id="alarmList"></div>
+
+  </div>
+
+</section>
+
+
+<!-- ================= 世界時計 ================= -->
+
+<section id="world" class="page">
+
+  <div class="card">
+
+    <h2>🌍 世界時計</h2>
+
+    <div class="controls">
+
+      <select id="citySelect">
+
+        <option value="Asia/Tokyo">
+          東京 🇯🇵
+        </option>
+
+        <option value="America/New_York">
+          ニューヨーク 🇺🇸
+        </option>
+
+        <option value="Europe/London">
+          ロンドン 🇬🇧
+        </option>
+
+        <option value="Europe/Paris">
+          パリ 🇫🇷
+        </option>
+
+        <option value="Asia/Singapore">
+          シンガポール 🇸🇬
+        </option>
+
+        <option value="Australia/Sydney">
+          シドニー 🇦🇺
+        </option>
+
+        <option value="America/Los_Angeles">
+          ロサンゼルス 🇺🇸
+        </option>
+
+      </select>
+
+      <button class="primary" onclick="addWorldClock()">
+        ＋ 追加
+      </button>
+
+    </div>
+
+    <div class="world-list" id="worldList"></div>
+
+  </div>
+
+</section>
+
+
+<!-- ================= 設定 ================= -->
+
+<section id="settings" class="page">
+
+  <div class="card">
+
+    <h2>⚙️ 設定</h2>
+
+    <h3>🎨 テーマカラー</h3>
+
+    <div class="theme-grid">
+
+      <div class="theme blue" onclick="setTheme('#1677ff','#0d5bd7')">
+        BLUE
+      </div>
+
+      <div class="theme purple" onclick="setTheme('#7b4dff','#5e31d7')">
+        PURPLE
+      </div>
+
+      <div class="theme green" onclick="setTheme('#16a36a','#08794c')">
+        GREEN
+      </div>
+
+      <div class="theme orange" onclick="setTheme('#f27b22','#d45c08')">
+        ORANGE
+      </div>
+
+      <div class="theme red" onclick="setTheme('#e53935','#bd211e')">
+        RED
+      </div>
+
+      <div class="theme pink" onclick="setTheme('#e84d9b','#c52b78')">
+        PINK
+      </div>
+
+      <div class="theme cyan" onclick="setTheme('#00a8c6','#00839b')">
+        CYAN
+      </div>
+
+    </div>
+
+    <hr>
+
+    <h3>🕐 時計</h3>
+
+    <label>
+      <input
+        type="checkbox"
+        id="format24"
+        checked
+        onchange="saveSettings()"
+      >
+      24時間表示
+    </label>
+
+    <br><br>
+
+    <label>
+      <input
+        type="checkbox"
+        id="showSeconds"
+        checked
+        onchange="saveSettings()"
+      >
+      秒を表示
+    </label>
+
+    <hr>
+
+    <button onclick="clearAllData()">
+      🗑️ 保存データを削除
+    </button>
+
+  </div>
+
+</section>
+
+</div>
+
+
+<!-- ================= 予定追加モーダル ================= -->
+
+<div class="modal-bg" id="eventModal">
+
+  <div class="modal">
+
+    <h2 id="modalTitle">
+      ＋ 予定を追加
+    </h2>
+
+    <div class="form">
+
+      <label>予定の名前</label>
+
+      <input
+        id="eventName"
+        type="text"
+        placeholder="例：学校、ゲーム、宿題"
+      >
+
+      <label>日付</label>
+
+      <input
+        id="eventDate"
+        type="date"
+      >
+
+      <label>開始時刻</label>
+
+      <input
+        id="eventStart"
+        type="time"
+      >
+
+      <label>終了時刻</label>
+
+      <input
+        id="eventEnd"
+        type="time"
+      >
+
+    </div>
+
+    <div class="modal-buttons">
+
+      <button onclick="closeEventModal()">
+        キャンセル
+      </button>
+
+      <button
+        id="deleteEventButton"
+        onclick="deleteEditingEvent()"
+        style="display:none"
+      >
+        🗑️ 削除
+      </button>
+
+      <button
+        class="primary"
+        onclick="saveEvent()"
+      >
+        保存
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   設定
+===================================================== */
+
+let settings = {
+  format24:true,
+  showSeconds:true,
+  accent:"#1677ff",
+  accent2:"#0d5bd7"
+};
+
+function loadSettings(){
+
+  const saved =
+    localStorage.getItem("timebox_settings");
+
+  if(saved){
+    settings={
+      ...settings,
+      ...JSON.parse(saved)
+    };
+  }
+
+  document.documentElement.style.setProperty(
+    "--accent",
+    settings.accent
+  );
+
+  document.documentElement.style.setProperty(
+    "--accent2",
+    settings.accent2
+  );
+
+  document.getElementById("format24").checked =
+    settings.format24;
+
+  document.getElementById("showSeconds").checked =
+    settings.showSeconds;
+
+  if(localStorage.getItem("timebox_dark")==="true"){
+    document.body.classList.add("dark");
+  }
+}
+
+function saveSettings(){
+
+  settings.format24 =
+    document.getElementById("format24").checked;
+
+  settings.showSeconds =
+    document.getElementById("showSeconds").checked;
+
+  localStorage.setItem(
+    "timebox_settings",
+    JSON.stringify(settings)
+  );
+}
+
+function setTheme(accent,accent2){
+
+  settings.accent=accent;
+  settings.accent2=accent2;
+
+  document.documentElement.style.setProperty(
+    "--accent",
+    accent
+  );
+
+  document.documentElement.style.setProperty(
+    "--accent2",
+    accent2
+  );
+
+  saveSettings();
+}
+
+function toggleDark(){
+
+  document.body.classList.toggle("dark");
+
+  localStorage.setItem(
+    "timebox_dark",
+    document.body.classList.contains("dark")
+  );
+}
+
+
+/* =====================================================
+   ページ
+===================================================== */
+
+function showPage(id,btn){
+
+  document
+    .querySelectorAll(".page")
+    .forEach(x=>x.classList.remove("active"));
+
+  document
+    .getElementById(id)
+    .classList.add("active");
+
+  document
+    .querySelectorAll("nav button")
+    .forEach(x=>x.classList.remove("active"));
+
+  btn.classList.add("active");
+
+  if(id==="schedule"){
+    renderSchedule();
+  }
+}
+
+
+/* =====================================================
+   時計
+===================================================== */
+
+function updateClock(){
+
+  const now=new Date();
+
+  let hour=now.getHours();
+
+  if(!settings.format24){
+    hour=hour%12 || 12;
+  }
+
+  const hh=
+    String(hour).padStart(2,"0");
+
+  const mm=
+    String(now.getMinutes()).padStart(2,"0");
+
+  const ss=
+    String(now.getSeconds()).padStart(2,"0");
+
+  document.getElementById("mainTime")
+    .textContent=
+      settings.showSeconds
+      ? `${hh}:${mm}:${ss}`
+      : `${hh}:${mm}`;
+
+  const days=[
+    "日","月","火","水","木","金","土"
+  ];
+
+  document.getElementById("mainDate")
+    .textContent=
+      `${now.getFullYear()}年`+
+      `${now.getMonth()+1}月`+
+      `${now.getDate()}日 `+
+      `(${days[now.getDay()]})`;
+
+  const midnight=new Date(now);
+
+  midnight.setHours(24,0,0,0);
+
+  const remain=
+    Math.max(0,midnight-now)/1000;
+
+  document.getElementById("remaining")
+    .textContent=
+      `今日の残り時間：${formatHMS(remain)}`;
+
+  const start=new Date(now);
+
+  start.setHours(0,0,0,0);
+
+  const progress=
+    ((now-start)/(midnight-start))*100;
+
+  document.getElementById("dayProgress")
+    .textContent=
+      progress.toFixed(1)+"%";
+
+  document.getElementById("todayInfo")
+    .textContent=
+      `現在 ${now.toLocaleTimeString("ja-JP")}`;
+
+  updateCurrentSchedule();
+}
+
+function formatHMS(sec){
+
+  sec=Math.max(0,Math.floor(sec));
+
+  const h=Math.floor(sec/3600);
+
+  const m=Math.floor((sec%3600)/60);
+
+  const s=sec%60;
+
+  return `${String(h).padStart(2,"0")}:`+
+         `${String(m).padStart(2,"0")}:`+
+         `${String(s).padStart(2,"0")}`;
+}
+
+setInterval(updateClock,250);
+
+
+/* =====================================================
+   週間スケジュール
+===================================================== */
+
+let weekOffset=0;
+
+let events=
+  JSON.parse(
+    localStorage.getItem("timebox_events")||"[]"
+  );
+
+let editingEventId=null;
+
+
+/* 今週の月曜日 */
+
+function getMonday(offset=0){
+
+  const now=new Date();
+
+  now.setHours(0,0,0,0);
+
+  const day=now.getDay();
+
+  const diff=
+    day===0 ? -6 : 1-day;
+
+  now.setDate(
+    now.getDate()+diff+(offset*7)
+  );
+
+  return now;
+}
+
+function dateKey(date){
+
+  const y=date.getFullYear();
+
+  const m=String(
+    date.getMonth()+1
+  ).padStart(2,"0");
+
+  const d=String(
+    date.getDate()
+  ).padStart(2,"0");
+
+  return `${y}-${m}-${d}`;
+}
+
+function changeWeek(amount){
+
+  weekOffset+=amount;
+
+  renderSchedule();
+}
+
+function goCurrentWeek(){
+
+  weekOffset=0;
+
+  renderSchedule();
+}
+
+function renderSchedule(){
+
+  const container=
+    document.getElementById("scheduleScroll");
+
+  container.innerHTML="";
+
+  const monday=
+    getMonday(weekOffset);
+
+  const sunday=
+    new Date(monday);
+
+  sunday.setDate(
+    monday.getDate()+6
+  );
+
+  document.getElementById("weekRange")
+    .textContent=
+      `${monday.getMonth()+1}/${monday.getDate()}`+
+      ` ～ `+
+      `${sunday.getMonth()+1}/${sunday.getDate()}`;
+
+  const names=[
+    "月曜日",
+    "火曜日",
+    "水曜日",
+    "木曜日",
+    "金曜日",
+    "土曜日",
+    "日曜日"
+  ];
+
+  for(let d=0;d<7;d++){
+
+    const date=new Date(monday);
+
+    date.setDate(
+      monday.getDate()+d
+    );
+
+    const block=
+      document.createElement("div");
+
+    block.className="day-block";
+
+    const header=
+      document.createElement("div");
+
+    header.className="day-header";
+
+    const info=
+      document.createElement("div");
+
+    info.innerHTML=
+      `<div class="day-name">
+        ${names[d]}
+      </div>
+      <div class="day-date">
+        ${date.getFullYear()}/
+        ${date.getMonth()+1}/
+        ${date.getDate()}
+      </div>`;
+
+    const add=
+      document.createElement("button");
+
+    add.className="add-day";
+
+    add.textContent="＋";
+
+    add.onclick=()=>{
+      openEventModal(dateKey(date));
+    };
+
+    header.appendChild(info);
+    header.appendChild(add);
+
+    block.appendChild(header);
+
+
+    const timeline=
+      document.createElement("div");
+
+    timeline.className="timeline";
+
+    for(let hour=0;hour<24;hour++){
+
+      const slot=
+        document.createElement("div");
+
+      slot.className="hour";
+
+      slot.dataset.hour=hour;
+
+      const label=
+        document.createElement("div");
+
+      label.className="hour-label";
+
+      label.textContent=
+        `${String(hour).padStart(2,"0")}:00`;
+
+      slot.appendChild(label);
+
+      timeline.appendChild(slot);
+    }
+
+
+    /* 現在時間の黒背景 */
+
+    const now=new Date();
+
+    if(
+      dateKey(date)===dateKey(now)
+    ){
+
+      const currentHour=
+        timeline.querySelector(
+          `.hour[data-hour="${now.getHours()}"]`
+        );
+
+      if(currentHour){
+        currentHour.classList.add(
+          "current-hour"
+        );
+      }
+
+      const minutes=
+        now.getHours()*60+
+        now.getMinutes()+
+        now.getSeconds()/60;
+
+      const line=
+        document.createElement("div");
+
+      line.className="current-line";
+
+      line.style.top=
+        `${minutes}px`;
+
+      const dot=
+        document.createElement("div");
+
+      dot.className="current-dot";
+
+      line.appendChild(dot);
+
+      timeline.appendChild(line);
+    }
+
+
+    /* 予定 */
+
+    const key=dateKey(date);
+
+    events
+      .filter(e=>e.date===key)
+      .forEach(e=>{
+
+        const start=
+          timeToMinutes(e.start);
+
+        const end=
+          timeToMinutes(e.end);
+
+        let duration=
+          end-start;
+
+        if(duration<=0){
+          duration=60;
+        }
+
+        const event=
+          document.createElement("div");
+
+        event.className="event";
+
+        event.style.top=
+          `${start}px`;
+
+        event.style.height=
+          `${Math.max(30,duration)}px`;
+
+        event.innerHTML=
+          `<div class="event-title">
+            ${escapeHTML(e.name)}
+          </div>
+          <div class="event-time">
+            ${e.start} ～ ${e.end}
+          </div>`;
+
+        event.onclick=()=>{
+          openEventModal(null,e.id);
+        };
+
+        timeline.appendChild(event);
+      });
+
+
+    block.appendChild(timeline);
+
+    container.appendChild(block);
+  }
+
+  updateCurrentSchedule();
+}
+
+function updateCurrentSchedule(){
+
+  const now=new Date();
+
+  document
+    .querySelectorAll(".current-hour")
+    .forEach(x=>x.classList.remove("current-hour"));
+
+  document
+    .querySelectorAll(".current-line")
+    .forEach(x=>x.remove());
+
+  const today=
+    dateKey(now);
+
+  document
+    .querySelectorAll(".day-block")
+    .forEach(block=>{
+
+      const dateText=
+        block
+          .querySelector(".day-date")
+          ?.textContent
+          .trim();
+
+      if(!dateText)return;
+
+      const current=
+        dateText===
+        `${now.getFullYear()}/`+
+        `${now.getMonth()+1}/`+
+        `${now.getDate()}`;
+
+      if(!current)return;
+
+      const timeline=
+        block.querySelector(".timeline");
+
+      if(!timeline)return;
+
+      const hour=
+        timeline.querySelector(
+          `.hour[data-hour="${now.getHours()}"]`
+        );
+
+      if(hour){
+        hour.classList.add("current-hour");
+      }
+
+      const minutes=
+        now.getHours()*60+
+        now.getMinutes()+
+        now.getSeconds()/60;
+
+      const line=
+        document.createElement("div");
+
+      line.className="current-line";
+
+      line.style.top=
+        `${minutes}px`;
+
+      const dot=
+        document.createElement("div");
+
+      dot.className="current-dot";
+
+      line.appendChild(dot);
+
+      timeline.appendChild(line);
+    });
+}
+
+function timeToMinutes(time){
+
+  const [h,m]=time.split(":").map(Number);
+
+  return h*60+m;
+}
+
+
+/* =====================================================
+   予定モーダル
+===================================================== */
+
+function openEventModal(date=null,id=null){
+
+  editingEventId=id;
+
+  const modal=
+    document.getElementById("eventModal");
+
+  const deleteButton=
+    document.getElementById("deleteEventButton");
+
+  if(id){
+
+    const event=
+      events.find(e=>e.id===id);
+
+    if(!event)return;
+
+    document.getElementById("modalTitle")
+      .textContent="✏️ 予定を編集";
+
+    document.getElementById("eventName")
+      .value=event.name;
+
+    document.getElementById("eventDate")
+      .value=event.date;
+
+    document.getElementById("eventStart")
+      .value=event.start;
+
+    document.getElementById("eventEnd")
+      .value=event.end;
+
+    deleteButton.style.display="block";
+
+  }else{
+
+    document.getElementById("modalTitle")
+      .textContent="＋ 予定を追加";
+
+    const targetDate=
+      date || dateKey(new Date());
+
+    document.getElementById("eventName")
+      .value="";
+
+    document.getElementById("eventDate")
+      .value=targetDate;
+
+    document.getElementById("eventStart")
+      .value="09:00";
+
+    document.getElementById("eventEnd")
+      .value="10:00";
+
+    deleteButton.style.display="none";
+  }
+
+  modal.classList.add("show");
+}
+
+function closeEventModal(){
+
+  document
+    .getElementById("eventModal")
+    .classList.remove("show");
+
+  editingEventId=null;
+}
+
+function saveEvent(){
+
+  const name=
+    document.getElementById("eventName").value.trim();
+
+  const date=
+    document.getElementById("eventDate").value;
+
+  const start=
+    document.getElementById("eventStart").value;
+
+  const end=
+    document.getElementById("eventEnd").value;
+
+  if(!name){
+    alert("予定の名前を入力してください");
+    return;
+  }
+
+  if(!date || !start || !end){
+    alert("日付と時間を入力してください");
+    return;
+  }
+
+  if(editingEventId){
+
+    const event=
+      events.find(e=>e.id===editingEventId);
+
+    if(event){
+
+      event.name=name;
+      event.date=date;
+      event.start=start;
+      event.end=end;
+    }
+
+  }else{
+
+    events.push({
+      id:Date.now(),
+      name,
+      date,
+      start,
+      end
+    });
+
+  }
+
+  saveEvents();
+
+  closeEventModal();
+
+  renderSchedule();
+}
+
+function deleteEditingEvent(){
+
+  if(!editingEventId)return;
+
+  if(!confirm("この予定を削除しますか？")){
+    return;
+  }
+
+  events=
+    events.filter(
+      e=>e.id!==editingEventId
+    );
+
+  saveEvents();
+
+  closeEventModal();
+
+  renderSchedule();
+}
+
+function saveEvents(){
+
+  localStorage.setItem(
+    "timebox_events",
+    JSON.stringify(events)
+  );
+}
+
+function escapeHTML(text){
+
+  const div=
+    document.createElement("div");
+
+  div.textContent=text;
+
+  return div.innerHTML;
+}
+
+
+/* =====================================================
+   タイマー
+===================================================== */
+
+let timerSeconds=300;
+let timerInterval=null;
+
+function updateTimer(){
+
+  const m=
+    Math.floor(timerSeconds/60);
+
+  const s=
+    timerSeconds%60;
+
+  document.getElementById("timerDisplay")
+    .textContent=
+      `${String(m).padStart(2,"0")}:`+
+      `${String(s).padStart(2,"0")}`;
+}
+
+function setTimer(seconds){
+
+  pauseTimer();
+
+  timerSeconds=seconds;
+
+  updateTimer();
+}
+
+function customTimer(){
+
+  pauseTimer();
+
+  const min=
+    parseInt(
+      document.getElementById("timerMin").value
+    )||0;
+
+  const sec=
+    parseInt(
+      document.getElementById("timerSec").value
+    )||0;
+
+  timerSeconds=
+    min*60+sec;
+
+  updateTimer();
+}
+
+function startTimer(){
+
+  if(timerInterval || timerSeconds<=0){
+    return;
+  }
+
+  timerInterval=
+    setInterval(()=>{
+
+      timerSeconds--;
+
+      updateTimer();
+
+      if(timerSeconds<=0){
+
+        pauseTimer();
+
+        alert("⏰ タイマー終了！");
+
+        beep();
+      }
+
+    },1000);
+}
+
+function pauseTimer(){
+
+  clearInterval(timerInterval);
+
+  timerInterval=null;
+}
+
+function resetTimer(){
+
+  pauseTimer();
+
+  timerSeconds=300;
+
+  updateTimer();
+}
+
+
+/* =====================================================
+   ストップウォッチ
+===================================================== */
+
+let stopwatchElapsed=0;
+let stopwatchStart=0;
+let stopwatchInterval=null;
+
+function updateStopwatch(){
+
+  const sec=
+    Math.floor(stopwatchElapsed/1000);
+
+  const ms=
+    Math.floor(
+      (stopwatchElapsed%1000)/10
+    );
+
+  const min=
+    Math.floor(sec/60);
+
+  const seconds=
+    sec%60;
+
+  document.getElementById("stopwatchDisplay")
+    .textContent=
+      `${String(min).padStart(2,"0")}:`+
+      `${String(seconds).padStart(2,"0")}.`+
+      `${String(ms).padStart(2,"0")}`;
+}
+
+function startStopwatch(){
+
+  if(stopwatchInterval)return;
+
+  stopwatchStart=
+    Date.now()-stopwatchElapsed;
+
+  stopwatchInterval=
+    setInterval(()=>{
+
+      stopwatchElapsed=
+        Date.now()-stopwatchStart;
+
+      updateStopwatch();
+
+    },10);
+}
+
+function pauseStopwatch(){
+
+  clearInterval(stopwatchInterval);
+
+  stopwatchInterval=null;
+}
+
+function resetStopwatch(){
+
+  pauseStopwatch();
+
+  stopwatchElapsed=0;
+
+  document.getElementById("laps")
+    .innerHTML="";
+
+  updateStopwatch();
+}
+
+function lapStopwatch(){
+
+  const div=
+    document.createElement("div");
+
+  div.className="lap";
+
+  div.innerHTML=
+    `<span>ラップ</span>`+
+    `<strong>`+
+    `${document.getElementById("stopwatchDisplay").textContent}`+
+    `</strong>`;
+
+  document.getElementById("laps")
+    .prepend(div);
+}
+
+
+/* =====================================================
+   アラーム
+===================================================== */
+
+let alarms=
+  JSON.parse(
+    localStorage.getItem("timebox_alarms")||"[]"
+  );
+
+function saveAlarms(){
+
+  localStorage.setItem(
+    "timebox_alarms",
+    JSON.stringify(alarms)
+  );
+}
+
+function addAlarm(){
+
+  const time=
+    document.getElementById("alarmTime").value;
+
+  if(!time){
+    alert("時刻を選んでください");
+    return;
+  }
+
+  alarms.push({
+    id:Date.now(),
+    time,
+    enabled:true
+  });
+
+  saveAlarms();
+
+  renderAlarms();
+}
+
+function toggleAlarm(id){
+
+  const alarm=
+    alarms.find(x=>x.id===id);
+
+  if(alarm){
+    alarm.enabled=!alarm.enabled;
+  }
+
+  saveAlarms();
+
+  renderAlarms();
+}
+
+function deleteAlarm(id){
+
+  alarms=
+    alarms.filter(x=>x.id!==id);
+
+  saveAlarms();
+
+  renderAlarms();
+}
+
+function renderAlarms(){
+
+  const list=
+    document.getElementById("alarmList");
+
+  list.innerHTML="";
+
+  alarms.forEach(alarm=>{
+
+    const div=
+      document.createElement("div");
+
+    div.className="alarm";
+
+    div.innerHTML=
+      `<div>
+        <div class="alarm-time">
+          ${alarm.time}
+        </div>
+        <small>
+          ${alarm.enabled?"ON":"OFF"}
+        </small>
+      </div>
+
+      <div>
+        <button
+          onclick="toggleAlarm(${alarm.id})">
+          ON/OFF
+        </button>
+
+        <button
+          onclick="deleteAlarm(${alarm.id})">
+          削除
+        </button>
+      </div>`;
+
+    list.appendChild(div);
+  });
+}
+
+let lastAlarm="";
+
+function checkAlarms(){
+
+  const now=new Date();
+
+  const current=
+    `${String(now.getHours()).padStart(2,"0")}:`+
+    `${String(now.getMinutes()).padStart(2,"0")}`;
+
+  if(current===lastAlarm)return;
+
+  lastAlarm=current;
+
+  alarms.forEach(alarm=>{
+
+    if(
+      alarm.enabled &&
+      alarm.time===current
+    ){
+
+      alert("⏰ アラーム："+current);
+
+      beep();
+    }
+  });
+}
+
+setInterval(checkAlarms,1000);
+
+
+/* =====================================================
+   世界時計
+===================================================== */
+
+let worldClocks=
+  JSON.parse(
+    localStorage.getItem("timebox_world")||"[]"
+  );
+
+function addWorldClock(){
+
+  const select=
+    document.getElementById("citySelect");
+
+  const zone=select.value;
+
+  const name=
+    select.options[
+      select.selectedIndex
+    ].text;
+
+  if(
+    worldClocks.some(x=>x.zone===zone)
+  ){
+    return;
+  }
+
+  worldClocks.push({
+    zone,
+    name
+  });
+
+  localStorage.setItem(
+    "timebox_world",
+    JSON.stringify(worldClocks)
+  );
+
+  renderWorld();
+}
+
+function removeWorldClock(zone){
+
+  worldClocks=
+    worldClocks.filter(
+      x=>x.zone!==zone
+    );
+
+  localStorage.setItem(
+    "timebox_world",
+    JSON.stringify(worldClocks)
+  );
+
+  renderWorld();
+}
+
+function renderWorld(){
+
+  const list=
+    document.getElementById("worldList");
+
+  list.innerHTML="";
+
+  worldClocks.forEach(x=>{
+
+    const div=
+      document.createElement("div");
+
+    div.className="world";
+
+    const safeId=
+      x.zone.replace(/[^a-z0-9]/gi,"");
+
+    div.innerHTML=
+      `<div>${x.name}</div>
+       <div
+         class="world-time"
+         id="world_${safeId}">
+         --:--:--
+       </div>
+       <button
+         onclick="removeWorldClock('${x.zone}')">
+         ×
+       </button>`;
+
+    list.appendChild(div);
+  });
+
+  updateWorld();
+}
+
+function updateWorld(){
+
+  worldClocks.forEach(x=>{
+
+    const id=
+      "world_"+
+      x.zone.replace(/[^a-z0-9]/gi,"");
+
+    const el=
+      document.getElementById(id);
+
+    if(!el)return;
+
+    el.textContent=
+      new Intl.DateTimeFormat(
+        "ja-JP",
+        {
+          timeZone:x.zone,
+          hour:"2-digit",
+          minute:"2-digit",
+          second:"2-digit"
+        }
+      ).format(new Date());
+  });
+}
+
+setInterval(updateWorld,1000);
+
+
+/* =====================================================
+   音
+===================================================== */
+
+function beep(){
+
+  try{
+
+    const ctx=
+      new AudioContext();
+
+    const osc=
+      ctx.createOscillator();
+
+    const gain=
+      ctx.createGain();
+
+    osc.connect(gain);
+
+    gain.connect(ctx.destination);
+
+    osc.frequency.value=880;
+
+    gain.gain.value=.15;
+
+    osc.start();
+
+    setTimeout(()=>{
+
+      osc.stop();
+
+      ctx.close();
+
+    },500);
+
+  }catch(e){}
+}
+
+
+/* =====================================================
+   データ削除
+===================================================== */
+
+function clearAllData(){
+
+  if(
+    !confirm(
+      "予定・アラーム・世界時計などの保存データを削除しますか？"
+    )
+  ){
+    return;
+  }
+
+  localStorage.removeItem("timebox_events");
+  localStorage.removeItem("timebox_alarms");
+  localStorage.removeItem("timebox_world");
+
+  events=[];
+  alarms=[];
+  worldClocks=[];
+
+  renderSchedule();
+  renderAlarms();
+  renderWorld();
+}
+
+
+/* =====================================================
+   起動
+===================================================== */
+
+loadSettings();
+
+updateClock();
+
+updateTimer();
+
+updateStopwatch();
+
+renderAlarms();
+
+renderWorld();
+
+renderSchedule();
+
+</script>
+
+</body>
+</html>
+```
