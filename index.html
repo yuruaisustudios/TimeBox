@@ -1,2440 +1,1824 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-
-<title>TimeBox</title>
-
-<!-- TimeBox アイコン -->
-<link rel="icon" type="image/svg+xml" href="./gemini-svg%20(1).svg">
-<link rel="apple-touch-icon" href="./gemini-svg%20(1).svg">
-
-<!-- ホーム画面用 -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="TimeBox">
-<meta name="theme-color" content="#1677ff">
-
-<style>
-:root{
-  --accent:#1677ff;
-  --accent2:#0d5bd7;
-  --bg:#eef3f8;
-  --card:#ffffff;
-  --text:#111111;
-  --muted:#68707c;
-  --line:#dfe4ea;
-  --danger:#e53935;
-  --event:#1677ff;
-  --today-bg:#eef6ff;
-}
-
-*{
-  box-sizing:border-box;
-}
-
-html,
-body{
-  margin:0;
-  min-height:100%;
-  font-family:
-    Arial,
-    "Noto Sans JP",
-    sans-serif;
-  background:var(--bg);
-  color:var(--text);
-}
-
-body.dark{
-  --bg:#0d0f12;
-  --card:#181b20;
-  --text:#ffffff;
-  --muted:#9aa2ad;
-  --line:#30343b;
-  --today-bg:#17263a;
-}
-
-button,
-input,
-select{
-  font:inherit;
-}
-
-button{
-  border:0;
-  background:var(--card);
-  color:var(--text);
-  border-radius:12px;
-  padding:10px 14px;
-  cursor:pointer;
-  box-shadow:0 2px 8px rgba(0,0,0,.06);
-  transition:.15s;
-}
-
-button:hover{
-  transform:translateY(-1px);
-}
-
-button:active{
-  transform:scale(.98);
-}
-
-.primary{
-  background:var(--accent);
-  color:#fff;
-}
-
-.danger{
-  background:var(--danger);
-  color:#fff;
-}
-
-input,
-select{
-  border:1px solid var(--line);
-  background:var(--card);
-  color:var(--text);
-  border-radius:10px;
-  padding:10px;
-  outline:none;
-}
-
-input:focus,
-select:focus{
-  border-color:var(--accent);
-}
-
-.app{
-  width:100%;
-  max-width:1400px;
-  margin:auto;
-  padding:18px;
-}
-
-/* HEADER */
-
-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  margin-bottom:14px;
-}
-
-.logo{
-  font-size:25px;
-  font-weight:800;
-}
-
-.logo span{
-  color:var(--accent);
-}
-
-.header-buttons{
-  display:flex;
-  gap:8px;
-}
-
-/* NAV */
-
-nav{
-  display:flex;
-  gap:7px;
-  overflow-x:auto;
-  padding-bottom:12px;
-}
-
-nav button{
-  white-space:nowrap;
-}
-
-nav button.active{
-  background:var(--accent);
-  color:#fff;
-}
-
-/* PAGE */
-
-.page{
-  display:none;
-}
-
-.page.active{
-  display:block;
-}
-
-/* CLOCK */
-
-.clock-card{
-  background:var(--card);
-  border-radius:25px;
-  padding:50px 20px;
-  text-align:center;
-}
-
-.clock-time{
-  font-size:clamp(55px,12vw,125px);
-  font-weight:800;
-  letter-spacing:2px;
-}
-
-.clock-date{
-  margin-top:10px;
-  color:var(--muted);
-  font-size:19px;
-}
-
-.remaining{
-  margin-top:25px;
-  color:var(--muted);
-}
-
-.info-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:15px;
-  margin-top:15px;
-}
-
-.card{
-  background:var(--card);
-  border-radius:20px;
-  padding:20px;
-}
-
-/* GENERAL */
-
-.big-number{
-  font-size:65px;
-  font-weight:800;
-  text-align:center;
-  margin:35px 0;
-}
-
-.controls{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:8px;
-  flex-wrap:wrap;
-}
-
-/* =========================
-   CALENDAR
-========================= */
-
-.calendar-toolbar{
-  background:var(--bg);
-  position:sticky;
-  top:0;
-  z-index:40;
-  padding:5px 0 12px;
-}
-
-.calendar-toolbar-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-}
-
-.calendar-title{
-  font-size:24px;
-  font-weight:800;
-}
-
-.calendar-range{
-  color:var(--muted);
-  margin-top:4px;
-  font-size:14px;
-}
-
-.calendar-actions{
-  display:flex;
-  align-items:center;
-  gap:7px;
-  flex-wrap:wrap;
-}
-
-.view-switch{
-  display:flex;
-  background:var(--card);
-  border-radius:12px;
-  padding:3px;
-  box-shadow:0 2px 8px rgba(0,0,0,.06);
-}
-
-.view-switch button{
-  box-shadow:none;
-  padding:8px 12px;
-  border-radius:9px;
-}
-
-.view-switch button.active{
-  background:var(--accent);
-  color:#fff;
-}
-
-/* WEEK */
-
-.calendar-container{
-  background:var(--card);
-  border-radius:20px;
-  overflow:hidden;
-  box-shadow:0 2px 10px rgba(0,0,0,.06);
-}
-
-.week-calendar{
-  display:grid;
-  grid-template-columns:65px repeat(7,minmax(120px,1fr));
-  min-width:920px;
-}
-
-.calendar-scroll{
-  overflow:auto;
-  height:calc(100vh - 235px);
-  min-height:550px;
-}
-
-.week-head{
-  position:sticky;
-  top:0;
-  z-index:30;
-  background:var(--card);
-  border-bottom:1px solid var(--line);
-}
-
-.time-head{
-  border-right:1px solid var(--line);
-}
-
-.day-head{
-  text-align:center;
-  padding:10px 5px;
-  border-right:1px solid var(--line);
-}
-
-.day-head-name{
-  font-size:12px;
-  color:var(--muted);
-  font-weight:700;
-}
-
-.day-head-number{
-  margin:4px auto 0;
-  width:34px;
-  height:34px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:50%;
-  font-size:18px;
-  font-weight:800;
-}
-
-.day-head.today .day-head-number{
-  background:var(--accent);
-  color:#fff;
-}
-
-.day-head.today .day-head-name{
-  color:var(--accent);
-}
-
-.time-column{
-  border-right:1px solid var(--line);
-  background:var(--card);
-}
-
-.time-label{
-  height:60px;
-  position:relative;
-  border-bottom:1px solid var(--line);
-}
-
-.time-label span{
-  position:absolute;
-  right:8px;
-  top:-8px;
-  color:var(--muted);
-  font-size:11px;
-}
-
-.day-column{
-  position:relative;
-  height:1440px;
-  border-right:1px solid var(--line);
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent 29px,
-      var(--line) 30px,
-      transparent 31px,
-      transparent 59px,
-      var(--line) 60px
-    );
-}
-
-.day-column.today{
-  background-color:var(--today-bg);
-}
-
-.hour-line{
-  position:absolute;
-  left:0;
-  right:0;
-  height:1px;
-  background:var(--line);
-}
-
-/* EVENTS */
-
-.calendar-event{
-  position:absolute;
-  left:3px;
-  right:3px;
-  border-radius:7px;
-  padding:5px 7px;
-  color:#fff;
-  overflow:hidden;
-  cursor:pointer;
-  z-index:10;
-  box-shadow:0 2px 5px rgba(0,0,0,.18);
-  border-left:3px solid rgba(255,255,255,.45);
-}
-
-.calendar-event:hover{
-  filter:brightness(.96);
-  z-index:20;
-}
-
-.calendar-event-title{
-  font-size:12px;
-  font-weight:800;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-.calendar-event-time{
-  font-size:10px;
-  opacity:.9;
-  margin-top:2px;
-}
-
-/* CURRENT LINE */
-
-.current-line{
-  position:absolute;
-  left:0;
-  right:0;
-  height:2px;
-  background:#e53935;
-  z-index:25;
-  pointer-events:none;
-}
-
-.current-dot{
-  position:absolute;
-  left:-5px;
-  top:-4px;
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  background:#e53935;
-}
-
-/* MONTH */
-
-.month-calendar{
-  display:none;
-  padding:10px;
-}
-
-.month-grid{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  border-top:1px solid var(--line);
-  border-left:1px solid var(--line);
-}
-
-.month-weekday{
-  text-align:center;
-  padding:10px;
-  color:var(--muted);
-  font-size:12px;
-  font-weight:800;
-  border-right:1px solid var(--line);
-  border-bottom:1px solid var(--line);
-}
-
-.month-day{
-  min-height:120px;
-  padding:7px;
-  border-right:1px solid var(--line);
-  border-bottom:1px solid var(--line);
-  background:var(--card);
-}
-
-.month-day.other-month{
-  opacity:.45;
-}
-
-.month-day.today{
-  background:var(--today-bg);
-}
-
-.month-number{
-  width:27px;
-  height:27px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:50%;
-  font-size:13px;
-  font-weight:800;
-  margin-bottom:5px;
-}
-
-.month-day.today .month-number{
-  background:var(--accent);
-  color:#fff;
-}
-
-.month-event{
-  display:block;
-  width:100%;
-  border:0;
-  border-radius:5px;
-  padding:4px 6px;
-  margin:3px 0;
-  color:#fff;
-  font-size:11px;
-  text-align:left;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  box-shadow:none;
-}
-
-/* DAY */
-
-.day-calendar{
-  display:none;
-  min-width:500px;
-}
-
-.day-calendar-grid{
-  display:grid;
-  grid-template-columns:65px 1fr;
-}
-
-.day-column-single{
-  position:relative;
-  height:1440px;
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent 29px,
-      var(--line) 30px,
-      transparent 31px,
-      transparent 59px,
-      var(--line) 60px
-    );
-}
-
-.day-single-head{
-  text-align:center;
-  padding:12px;
-  border-bottom:1px solid var(--line);
-  font-weight:800;
-}
-
-/* TIMER */
-
-.timer-card{
-  max-width:800px;
-  margin:auto;
-}
-
-/* ALARM */
-
-.alarm-list{
-  display:grid;
-  gap:10px;
-  margin-top:15px;
-}
-
-.alarm{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  padding:15px;
-  border-radius:14px;
-  background:var(--bg);
-}
-
-.alarm-time{
-  font-size:25px;
-  font-weight:800;
-}
-
-/* WORLD */
-
-.world-list{
-  display:grid;
-  gap:10px;
-  margin-top:15px;
-}
-
-.world{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  padding:15px;
-  border-radius:13px;
-  background:var(--bg);
-}
-
-.world-time{
-  font-size:22px;
-  font-weight:800;
-}
-
-/* LAPS */
-
-.laps{
-  max-height:250px;
-  overflow:auto;
-  margin-top:15px;
-}
-
-.lap{
-  display:flex;
-  justify-content:space-between;
-  padding:10px;
-  border-bottom:1px solid var(--line);
-}
-
-/* SETTINGS */
-
-.theme-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(110px,1fr));
-  gap:10px;
-  margin-top:15px;
-}
-
-.theme{
-  padding:18px 10px;
-  border-radius:15px;
-  color:#fff;
-  font-weight:bold;
-  cursor:pointer;
-  text-align:center;
-}
-
-.theme.blue{background:#1677ff}
-.theme.purple{background:#7b4dff}
-.theme.green{background:#16a36a}
-.theme.orange{background:#f27b22}
-.theme.red{background:#e53935}
-.theme.pink{background:#e84d9b}
-.theme.cyan{background:#00a8c6}
-
-/* MODAL */
-
-.modal-bg{
-  display:none;
-  position:fixed;
-  inset:0;
-  z-index:100;
-  background:rgba(0,0,0,.55);
-  align-items:center;
-  justify-content:center;
-  padding:15px;
-}
-
-.modal-bg.show{
-  display:flex;
-}
-
-.modal{
-  width:100%;
-  max-width:440px;
-  background:var(--card);
-  border-radius:22px;
-  padding:22px;
-  max-height:90vh;
-  overflow:auto;
-}
-
-.modal h2{
-  margin-top:0;
-}
-
-.form{
-  display:grid;
-  gap:9px;
-}
-
-.form label{
-  font-size:13px;
-  color:var(--muted);
-}
-
-.form input,
-.form select{
-  width:100%;
-}
-
-.modal-buttons{
-  display:flex;
-  gap:8px;
-  margin-top:15px;
-}
-
-.modal-buttons button{
-  flex:1;
-}
-
-.color-options{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
-
-.color-option{
-  width:32px;
-  height:32px;
-  padding:0;
-  border-radius:50%;
-  border:3px solid transparent;
-  box-shadow:none;
-}
-
-.color-option.selected{
-  border-color:var(--text);
-  transform:scale(1.08);
-}
-
-/* RESPONSIVE */
-
-@media(max-width:800px){
-
-  .app{
-    padding:10px;
-  }
-
-  header{
-    margin-bottom:7px;
-  }
-
-  .logo{
-    font-size:21px;
-  }
-
-  .calendar-toolbar-top{
-    align-items:flex-start;
-    flex-direction:column;
-  }
-
-  .calendar-actions{
-    width:100%;
-  }
-
-  .calendar-actions button{
-    flex:1;
-  }
-
-  .view-switch{
-    width:100%;
-  }
-
-  .view-switch button{
-    flex:1;
-  }
-
-  .calendar-scroll{
-    height:calc(100vh - 290px);
-  }
-
-  .month-day{
-    min-height:90px;
-  }
-}
-
-@media(max-width:600px){
-
-  .clock-card{
-    padding:35px 10px;
-  }
-
-  .big-number{
-    font-size:50px;
-  }
-
-  .month-day{
-    min-height:75px;
-    padding:4px;
-  }
-
-  .month-weekday{
-    padding:7px 2px;
-    font-size:10px;
-  }
-
-  .month-event{
-    font-size:9px;
-    padding:3px;
-  }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+  <title>TimeBox</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#1677ff">
+
+  <!-- アイコン -->
+  <link rel="icon" type="image/svg+xml" href="./gemini-svg%20(1).svg">
+  <link rel="apple-touch-icon" href="./gemini-svg%20(1).svg">
+
+  <!-- iPhone / iPad -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="TimeBox">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #1677ff;
+      --primary-light: #e8f1ff;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --sub: #697386;
+      --border: #e1e6ef;
+      --danger: #ef4444;
+      --shadow: 0 8px 30px rgba(30, 60, 100, .08);
+    }
+
+    body.dark {
+      --bg: #10141b;
+      --card: #181e27;
+      --text: #f4f7fb;
+      --sub: #9da8b8;
+      --border: #2b3442;
+      --primary-light: #162d50;
+      --shadow: 0 8px 30px rgba(0, 0, 0, .25);
+    }
+
+    body {
+      margin: 0;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        "Noto Sans JP",
+        sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    /* =========================
+       HEADER
+    ========================= */
+
+    header {
+      height: 64px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 21px;
+      font-weight: 700;
+    }
+
+    .logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      object-fit: cover;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .icon-btn,
+    .add-btn {
+      height: 40px;
+      border-radius: 12px;
+      padding: 0 13px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .icon-btn {
+      width: 40px;
+      padding: 0;
+      font-size: 18px;
+    }
+
+    .add-btn {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* =========================
+       LAYOUT
+    ========================= */
+
+    .app {
+      display: flex;
+      min-height: calc(100vh - 64px);
+    }
+
+    nav {
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      padding: 16px 12px;
+    }
+
+    .nav-btn {
+      width: 100%;
+      text-align: left;
+      padding: 12px 14px;
+      margin-bottom: 4px;
+      border-radius: 11px;
+      background: transparent;
+      color: var(--sub);
+      font-weight: 600;
+    }
+
+    .nav-btn:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .nav-btn.active {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    main {
+      flex: 1;
+      min-width: 0;
+      padding: 24px;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* =========================
+       COMMON
+    ========================= */
+
+    .page-title {
+      font-size: 28px;
+      margin: 0 0 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .muted {
+      color: var(--sub);
+    }
+
+    .big-time {
+      font-size: clamp(45px, 8vw, 90px);
+      font-weight: 700;
+      letter-spacing: -3px;
+      text-align: center;
+      margin: 30px 0 5px;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .progress {
+      height: 10px;
+      background: var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background: var(--primary);
+      border-radius: 20px;
+      transition: width .3s;
+    }
+
+    .primary-btn {
+      background: var(--primary);
+      color: white;
+      padding: 11px 17px;
+      border-radius: 11px;
+      font-weight: 600;
+    }
+
+    .secondary-btn {
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 11px 17px;
+      border-radius: 11px;
+      font-weight: 600;
+    }
+
+    .danger-btn {
+      background: #fee2e2;
+      color: var(--danger);
+      padding: 11px 17px;
+      border-radius: 11px;
+      font-weight: 600;
+    }
+
+    body.dark .danger-btn {
+      background: #3a2025;
+    }
+
+    /* =========================
+       CLOCK
+    ========================= */
+
+    .clock-card {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .clock-info {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-top: 25px;
+    }
+
+    .info-box {
+      background: var(--bg);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .info-number {
+      font-size: 25px;
+      font-weight: 700;
+      margin-top: 5px;
+    }
+
+    /* =========================
+       CALENDAR
+    ========================= */
+
+    .calendar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .calendar-controls {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .calendar-controls button {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 10px;
+    }
+
+    .week-title {
+      font-size: 21px;
+      font-weight: 700;
+    }
+
+    .calendar-wrapper {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: auto;
+      box-shadow: var(--shadow);
+    }
+
+    .calendar {
+      min-width: 850px;
+      display: grid;
+      grid-template-columns: 58px repeat(7, minmax(110px, 1fr));
+    }
+
+    .calendar-head {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .day-head {
+      min-height: 67px;
+      border-left: 1px solid var(--border);
+      text-align: center;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .day-head:hover {
+      background: var(--primary-light);
+    }
+
+    .day-name {
+      font-size: 12px;
+      color: var(--sub);
+    }
+
+    .day-number {
+      display: inline-flex;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      font-weight: 600;
+      margin-top: 3px;
+    }
+
+    .today-number {
+      background: var(--primary);
+      color: white;
+    }
+
+    .time-label {
+      height: 60px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      text-align: right;
+      padding: 4px 7px 0 0;
+      font-size: 11px;
+      color: var(--sub);
+      position: relative;
+      top: -7px;
+    }
+
+    .calendar-body {
+      display: contents;
+    }
+
+    .day-column {
+      position: relative;
+      border-left: 1px solid var(--border);
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent 29px,
+          var(--border) 30px,
+          transparent 30px,
+          transparent 59px,
+          var(--border) 60px
+        );
+      height: 1440px;
+    }
+
+    .day-column:hover {
+      background-color: rgba(22, 119, 255, .025);
+    }
+
+    .hour-click {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 60px;
+      cursor: pointer;
+    }
+
+    .event {
+      position: absolute;
+      border-radius: 7px;
+      padding: 5px 7px;
+      background: var(--primary);
+      color: white;
+      overflow: hidden;
+      cursor: pointer;
+      font-size: 12px;
+      z-index: 3;
+      box-shadow: 0 2px 5px rgba(0,0,0,.12);
+    }
+
+    .event:hover {
+      filter: brightness(.96);
+      z-index: 5;
+    }
+
+    .event-title {
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .event-time {
+      font-size: 10px;
+      opacity: .9;
+      margin-top: 2px;
+    }
+
+    .current-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #ef4444;
+      z-index: 8;
+      pointer-events: none;
+    }
+
+    .current-dot {
+      width: 8px;
+      height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+      position: absolute;
+      left: -4px;
+      top: -3px;
+    }
+
+    /* =========================
+       TIMER / STOPWATCH
+    ========================= */
+
+    .tool-card {
+      max-width: 650px;
+      margin: auto;
+      text-align: center;
+    }
+
+    .tool-time {
+      font-size: clamp(50px, 12vw, 100px);
+      font-weight: 700;
+      margin: 25px 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tool-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .presets {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 15px 0;
+    }
+
+    .presets button {
+      padding: 8px 13px;
+      border-radius: 10px;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .custom-time {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 15px 0;
+    }
+
+    .custom-time input {
+      width: 90px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    /* =========================
+       LISTS
+    ========================= */
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      background: var(--bg);
+      border-radius: 13px;
+    }
+
+    .list-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .small-btn {
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* =========================
+       SETTINGS
+    ========================= */
+
+    .setting {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .setting:last-child {
+      border-bottom: 0;
+    }
+
+    .setting input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* =========================
+       MODAL
+    ========================= */
+
+    .modal-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+    }
+
+    .modal-bg.show {
+      display: flex;
+    }
+
+    .modal {
+      width: min(500px, 100%);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: 0 20px 70px rgba(0,0,0,.3);
+    }
+
+    .modal h2 {
+      margin-top: 0;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: var(--sub);
+      margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--card);
+      color: var(--text);
+      outline: none;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    /* =========================
+       MOBILE
+    ========================= */
+
+    @media (max-width: 760px) {
+      header {
+        padding: 0 12px;
+      }
+
+      .app {
+        display: block;
+      }
+
+      nav {
+        width: 100%;
+        height: 58px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 200;
+        padding: 5px;
+        border-right: 0;
+        border-top: 1px solid var(--border);
+        display: flex;
+        overflow-x: auto;
+      }
+
+      .nav-btn {
+        min-width: 75px;
+        text-align: center;
+        margin: 0 2px;
+        padding: 7px 4px;
+        font-size: 11px;
+      }
+
+      main {
+        padding: 16px 12px 75px;
+      }
+
+      .page-title {
+        font-size: 23px;
+      }
+
+      .clock-info {
+        grid-template-columns: 1fr;
+      }
+
+      .add-btn {
+        font-size: 13px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="app">
-
 <header>
-  <div class="logo">⏰ <span>TimeBox</span></div>
+  <div class="logo">
+    <img src="./gemini-svg%20(1).svg" alt="TimeBox">
+    <span>TimeBox</span>
+  </div>
 
-  <div class="header-buttons">
-    <button onclick="toggleDark()" title="ダークモード">🌙</button>
-    <button class="primary" onclick="openEventModal()">＋ 予定</button>
+  <div class="header-actions">
+    <button class="icon-btn" id="darkBtn">🌙</button>
+    <button class="add-btn" id="headerAdd">＋ 予定</button>
   </div>
 </header>
 
-<nav>
-  <button class="active" onclick="showPage('clock',this)">時計</button>
-  <button onclick="showPage('schedule',this)">📅 予定</button>
-  <button onclick="showPage('timer',this)">⏳ タイマー</button>
-  <button onclick="showPage('stopwatch',this)">⏱️ ストップウォッチ</button>
-  <button onclick="showPage('alarm',this)">⏰ アラーム</button>
-  <button onclick="showPage('world',this)">🌍 世界時計</button>
-  <button onclick="showPage('settings',this)">⚙️ 設定</button>
-</nav>
+<div class="app">
 
-<!-- 時計 -->
+  <nav>
+    <button class="nav-btn active" data-page="clock">🕐 時計</button>
+    <button class="nav-btn" data-page="schedule">📅 予定</button>
+    <button class="nav-btn" data-page="timer">⏱ タイマー</button>
+    <button class="nav-btn" data-page="stopwatch">⏲ ストップウォッチ</button>
+    <button class="nav-btn" data-page="alarm">🔔 アラーム</button>
+    <button class="nav-btn" data-page="world">🌎 世界時計</button>
+    <button class="nav-btn" data-page="settings">⚙ 設定</button>
+  </nav>
 
-<section id="clock" class="page active">
+  <main>
 
-  <div class="clock-card">
+    <!-- 時計 -->
+    <section class="page active" id="page-clock">
+      <h1 class="page-title">時計</h1>
 
-    <div class="clock-time" id="mainTime">
-      00:00:00
-    </div>
+      <div class="card clock-card">
+        <div class="muted center" id="clockDate">----</div>
 
-    <div class="clock-date" id="mainDate">
-      ----
-    </div>
+        <div class="big-time" id="clockTime">
+          00:00:00
+        </div>
 
-    <div class="remaining" id="remaining">
-      今日の残り時間：--
-    </div>
+        <div class="center muted" id="remaining">
+          --
+        </div>
 
-  </div>
+        <br>
 
-  <div class="info-grid">
+        <div class="muted">今日の進み具合</div>
+        <div class="progress">
+          <div class="progress-bar" id="dayProgress"></div>
+        </div>
 
-    <div class="card">
-      <h3>📅 今日</h3>
-      <p id="todayInfo">---</p>
-    </div>
+        <div class="clock-info">
+          <div class="info-box">
+            <div class="muted">現在時刻</div>
+            <div class="info-number" id="clockShort">00:00</div>
+          </div>
 
-    <div class="card">
-      <h3>📊 今日の進行</h3>
-      <p id="dayProgress">0%</p>
-    </div>
+          <div class="info-box">
+            <div class="muted">曜日</div>
+            <div class="info-number" id="clockWeek">---</div>
+          </div>
 
-  </div>
+          <div class="info-box">
+            <div class="muted">年</div>
+            <div class="info-number" id="clockYear">----</div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-</section>
+    <!-- 予定 -->
+    <section class="page" id="page-schedule">
+      <div class="calendar-top">
+        <div>
+          <h1 class="page-title" style="margin:0">予定</h1>
+          <div class="week-title" id="weekTitle"></div>
+        </div>
 
-
-<!-- 予定 -->
-
-<section id="schedule" class="page">
-
-  <div class="calendar-toolbar">
-
-    <div class="calendar-toolbar-top">
-
-      <div>
-        <div class="calendar-title">📅 カレンダー</div>
-        <div class="calendar-range" id="calendarRange"></div>
+        <div class="calendar-controls">
+          <button id="prevWeek">‹</button>
+          <button id="todayWeek">今日</button>
+          <button id="nextWeek">›</button>
+          <button class="primary-btn" id="calendarAdd">＋ 予定</button>
+        </div>
       </div>
 
-      <div class="calendar-actions">
+      <div class="calendar-wrapper">
+        <div class="calendar">
 
-        <button onclick="goToday()">今日</button>
+          <div class="calendar-head"></div>
 
-        <button onclick="changeCalendar(-1)">←</button>
+          <div id="dayHeaders" class="calendar-head" style="display:contents"></div>
 
-        <button onclick="changeCalendar(1)">→</button>
+          <div id="calendarBody" style="display:contents"></div>
 
-        <div class="view-switch">
+        </div>
+      </div>
+    </section>
 
-          <button
-            id="dayViewButton"
-            onclick="setCalendarView('day')">
-            日
-          </button>
+    <!-- タイマー -->
+    <section class="page" id="page-timer">
+      <h1 class="page-title">タイマー</h1>
 
-          <button
-            id="weekViewButton"
-            class="active"
-            onclick="setCalendarView('week')">
-            週
-          </button>
+      <div class="card tool-card">
+        <div class="tool-time" id="timerDisplay">05:00</div>
 
-          <button
-            id="monthViewButton"
-            onclick="setCalendarView('month')">
-            月
-          </button>
+        <div class="presets">
+          <button data-min="1">1分</button>
+          <button data-min="3">3分</button>
+          <button data-min="5">5分</button>
+          <button data-min="10">10分</button>
+          <button data-min="15">15分</button>
+          <button data-min="30">30分</button>
+        </div>
 
+        <div class="custom-time">
+          <input type="number" id="timerMin" min="0" placeholder="分">
+          <input type="number" id="timerSec" min="0" max="59" placeholder="秒">
+          <button class="secondary-btn" id="setTimer">設定</button>
+        </div>
+
+        <div class="tool-buttons">
+          <button class="primary-btn" id="timerStart">開始</button>
+          <button class="secondary-btn" id="timerPause">一時停止</button>
+          <button class="danger-btn" id="timerReset">リセット</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ストップウォッチ -->
+    <section class="page" id="page-stopwatch">
+      <h1 class="page-title">ストップウォッチ</h1>
+
+      <div class="card tool-card">
+        <div class="tool-time" id="stopwatchDisplay">00:00.00</div>
+
+        <div class="tool-buttons">
+          <button class="primary-btn" id="swStart">開始</button>
+          <button class="secondary-btn" id="swLap">ラップ</button>
+          <button class="danger-btn" id="swReset">リセット</button>
+        </div>
+
+        <br>
+
+        <div class="list" id="laps"></div>
+      </div>
+    </section>
+
+    <!-- アラーム -->
+    <section class="page" id="page-alarm">
+      <h1 class="page-title">アラーム</h1>
+
+      <div class="card">
+        <div class="custom-time">
+          <input type="time" id="alarmTime">
+          <button class="primary-btn" id="addAlarm">追加</button>
+        </div>
+
+        <div class="list" id="alarmList"></div>
+      </div>
+    </section>
+
+    <!-- 世界時計 -->
+    <section class="page" id="page-world">
+      <h1 class="page-title">世界時計</h1>
+
+      <div class="card">
+        <div class="custom-time">
+          <select id="worldCity">
+            <option value="Asia/Tokyo">東京</option>
+            <option value="America/New_York">ニューヨーク</option>
+            <option value="Europe/London">ロンドン</option>
+            <option value="Europe/Paris">パリ</option>
+            <option value="Asia/Shanghai">上海</option>
+            <option value="Asia/Singapore">シンガポール</option>
+            <option value="Australia/Sydney">シドニー</option>
+            <option value="America/Los_Angeles">ロサンゼルス</option>
+          </select>
+
+          <button class="primary-btn" id="addWorld">追加</button>
+        </div>
+
+        <div class="list" id="worldList"></div>
+      </div>
+    </section>
+
+    <!-- 設定 -->
+    <section class="page" id="page-settings">
+      <h1 class="page-title">設定</h1>
+
+      <div class="card">
+
+        <div class="setting">
+          <div>
+            <b>24時間表示</b>
+            <div class="muted">例：18:30</div>
+          </div>
+          <input type="checkbox" id="setting24" checked>
+        </div>
+
+        <div class="setting">
+          <div>
+            <b>秒を表示</b>
+            <div class="muted">時計に秒を表示します</div>
+          </div>
+          <input type="checkbox" id="settingSeconds" checked>
+        </div>
+
+        <div class="setting">
+          <div>
+            <b>ダークモード</b>
+          </div>
+          <input type="checkbox" id="settingDark">
+        </div>
+
+        <div class="setting">
+          <div>
+            <b>データ</b>
+            <div class="muted">予定・アラームなどを削除します</div>
+          </div>
+          <button class="danger-btn" id="clearData">全削除</button>
         </div>
 
       </div>
+    </section>
 
-    </div>
-
-  </div>
-
-  <div class="calendar-container">
-
-    <div id="weekCalendar" class="calendar-scroll"></div>
-
-    <div id="dayCalendar" class="calendar-scroll"></div>
-
-    <div id="monthCalendar" class="month-calendar"></div>
-
-  </div>
-
-</section>
-
-
-<!-- タイマー -->
-
-<section id="timer" class="page">
-
-  <div class="card timer-card">
-
-    <h2>⏳ タイマー</h2>
-
-    <div class="big-number" id="timerDisplay">
-      05:00
-    </div>
-
-    <div class="controls">
-      <button onclick="setTimer(60)">1分</button>
-      <button onclick="setTimer(300)">5分</button>
-      <button onclick="setTimer(600)">10分</button>
-      <button onclick="setTimer(1800)">30分</button>
-      <button onclick="setTimer(3600)">1時間</button>
-    </div>
-
-    <br>
-
-    <div class="controls">
-
-      <input id="timerMin" type="number" min="0" placeholder="分">
-
-      <input id="timerSec" type="number" min="0" max="59" placeholder="秒">
-
-      <button onclick="customTimer()">設定</button>
-
-    </div>
-
-    <br>
-
-    <div class="controls">
-      <button class="primary" onclick="startTimer()">▶ スタート</button>
-      <button onclick="pauseTimer()">⏸ 一時停止</button>
-      <button onclick="resetTimer()">↩ リセット</button>
-    </div>
-
-  </div>
-
-</section>
-
-
-<!-- ストップウォッチ -->
-
-<section id="stopwatch" class="page">
-
-  <div class="card">
-
-    <h2>⏱️ ストップウォッチ</h2>
-
-    <div class="big-number" id="stopwatchDisplay">
-      00:00.00
-    </div>
-
-    <div class="controls">
-      <button class="primary" onclick="startStopwatch()">▶ スタート</button>
-      <button onclick="pauseStopwatch()">⏸ 一時停止</button>
-      <button onclick="lapStopwatch()">🏁 ラップ</button>
-      <button onclick="resetStopwatch()">↩ リセット</button>
-    </div>
-
-    <div class="laps" id="laps"></div>
-
-  </div>
-
-</section>
-
-
-<!-- アラーム -->
-
-<section id="alarm" class="page">
-
-  <div class="card">
-
-    <h2>⏰ アラーム</h2>
-
-    <div class="controls">
-
-      <input id="alarmTime" type="time">
-
-      <button class="primary" onclick="addAlarm()">＋ 追加</button>
-
-    </div>
-
-    <div class="alarm-list" id="alarmList"></div>
-
-  </div>
-
-</section>
-
-
-<!-- 世界時計 -->
-
-<section id="world" class="page">
-
-  <div class="card">
-
-    <h2>🌍 世界時計</h2>
-
-    <div class="controls">
-
-      <select id="citySelect">
-
-        <option value="Asia/Tokyo">東京 🇯🇵</option>
-        <option value="America/New_York">ニューヨーク 🇺🇸</option>
-        <option value="Europe/London">ロンドン 🇬🇧</option>
-        <option value="Europe/Paris">パリ 🇫🇷</option>
-        <option value="Asia/Singapore">シンガポール 🇸🇬</option>
-        <option value="Australia/Sydney">シドニー 🇦🇺</option>
-        <option value="America/Los_Angeles">ロサンゼルス 🇺🇸</option>
-
-      </select>
-
-      <button class="primary" onclick="addWorldClock()">＋ 追加</button>
-
-    </div>
-
-    <div class="world-list" id="worldList"></div>
-
-  </div>
-
-</section>
-
-
-<!-- 設定 -->
-
-<section id="settings" class="page">
-
-  <div class="card">
-
-    <h2>⚙️ 設定</h2>
-
-    <h3>🎨 テーマカラー</h3>
-
-    <div class="theme-grid">
-
-      <div class="theme blue" onclick="setTheme('#1677ff','#0d5bd7')">BLUE</div>
-      <div class="theme purple" onclick="setTheme('#7b4dff','#5e31d7')">PURPLE</div>
-      <div class="theme green" onclick="setTheme('#16a36a','#08794c')">GREEN</div>
-      <div class="theme orange" onclick="setTheme('#f27b22','#d45c08')">ORANGE</div>
-      <div class="theme red" onclick="setTheme('#e53935','#bd211e')">RED</div>
-      <div class="theme pink" onclick="setTheme('#e84d9b','#c52b78')">PINK</div>
-      <div class="theme cyan" onclick="setTheme('#00a8c6','#00839b')">CYAN</div>
-
-    </div>
-
-    <hr>
-
-    <h3>🕐 時計</h3>
-
-    <label>
-      <input type="checkbox" id="format24" checked onchange="saveSettings()">
-      24時間表示
-    </label>
-
-    <br><br>
-
-    <label>
-      <input type="checkbox" id="showSeconds" checked onchange="saveSettings()">
-      秒を表示
-    </label>
-
-    <hr>
-
-    <button onclick="clearAllData()">
-      🗑️ 保存データを削除
-    </button>
-
-  </div>
-
-</section>
-
+  </main>
 </div>
 
-
 <!-- 予定モーダル -->
-
 <div class="modal-bg" id="eventModal">
-
   <div class="modal">
 
-    <h2 id="modalTitle">＋ 予定を追加</h2>
+    <h2 id="modalTitle">予定を追加</h2>
 
-    <div class="form">
+    <div class="form-group">
+      <label>予定名</label>
+      <input id="eventName" placeholder="例：映画を見る">
+    </div>
 
-      <label>予定の名前</label>
-
-      <input
-        id="eventName"
-        type="text"
-        placeholder="例：学校、映画、宿題">
-
+    <div class="form-group">
       <label>日付</label>
-
       <input id="eventDate" type="date">
+    </div>
 
-      <label>開始時刻</label>
+    <div class="form-group">
+      <label>開始</label>
+      <input id="eventStart" type="time" value="09:00">
+    </div>
 
-      <input id="eventStart" type="time">
-
-      <label>終了時刻</label>
-
-      <input id="eventEnd" type="time">
-
-      <label>予定の色</label>
-
-      <div class="color-options">
-
-        <button class="color-option" data-color="#1677ff"
-          style="background:#1677ff"
-          onclick="selectEventColor('#1677ff')"></button>
-
-        <button class="color-option" data-color="#7b4dff"
-          style="background:#7b4dff"
-          onclick="selectEventColor('#7b4dff')"></button>
-
-        <button class="color-option" data-color="#16a36a"
-          style="background:#16a36a"
-          onclick="selectEventColor('#16a36a')"></button>
-
-        <button class="color-option" data-color="#f27b22"
-          style="background:#f27b22"
-          onclick="selectEventColor('#f27b22')"></button>
-
-        <button class="color-option" data-color="#e53935"
-          style="background:#e53935"
-          onclick="selectEventColor('#e53935')"></button>
-
-        <button class="color-option" data-color="#e84d9b"
-          style="background:#e84d9b"
-          onclick="selectEventColor('#e84d9b')"></button>
-
-        <button class="color-option" data-color="#00a8c6"
-          style="background:#00a8c6"
-          onclick="selectEventColor('#00a8c6')"></button>
-
-      </div>
-
+    <div class="form-group">
+      <label>終了</label>
+      <input id="eventEnd" type="time" value="10:00">
     </div>
 
     <div class="modal-buttons">
-
-      <button onclick="closeEventModal()">キャンセル</button>
-
-      <button
-        id="deleteEventButton"
-        class="danger"
-        onclick="deleteEditingEvent()"
-        style="display:none">
-        🗑️ 削除
-      </button>
-
-      <button class="primary" onclick="saveEvent()">保存</button>
-
+      <button class="secondary-btn" id="cancelEvent">キャンセル</button>
+      <button class="danger-btn" id="deleteEvent">削除</button>
+      <button class="primary-btn" id="saveEvent">保存</button>
     </div>
 
   </div>
-
 </div>
 
-
 <script>
+/* =========================================================
+   TimeBox
+========================================================= */
 
-/* =====================================================
-   SETTINGS
-===================================================== */
+const $ = id => document.getElementById(id);
 
-let settings={
-  format24:true,
-  showSeconds:true,
-  accent:"#1677ff",
-  accent2:"#0d5bd7"
+const DAYS = ["日", "月", "火", "水", "木", "金", "土"];
+
+let events = JSON.parse(localStorage.getItem("timebox_events") || "[]");
+let alarms = JSON.parse(localStorage.getItem("timebox_alarms") || "[]");
+let worlds = JSON.parse(localStorage.getItem("timebox_world") || "[]");
+
+let settings = JSON.parse(
+  localStorage.getItem("timebox_settings") ||
+  '{"hour24":true,"seconds":true}'
+);
+
+let dark = localStorage.getItem("timebox_dark") === "true";
+
+let calendarDate = new Date();
+let editingEventId = null;
+
+
+/* =========================================================
+   ページ切り替え
+========================================================= */
+
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+
+    const page = btn.dataset.page;
+
+    document.querySelectorAll(".nav-btn")
+      .forEach(x => x.classList.remove("active"));
+
+    btn.classList.add("active");
+
+    document.querySelectorAll(".page")
+      .forEach(x => x.classList.remove("active"));
+
+    $("page-" + page).classList.add("active");
+
+    if (page === "schedule") {
+      renderCalendar();
+    }
+  });
+});
+
+
+/* =========================================================
+   ダークモード
+========================================================= */
+
+function applyDark() {
+  document.body.classList.toggle("dark", dark);
+  $("darkBtn").textContent = dark ? "☀️" : "🌙";
+  $("settingDark").checked = dark;
+
+  localStorage.setItem("timebox_dark", dark);
+}
+
+$("darkBtn").onclick = () => {
+  dark = !dark;
+  applyDark();
 };
 
-function loadSettings(){
+$("settingDark").onchange = e => {
+  dark = e.target.checked;
+  applyDark();
+};
 
-  const saved=localStorage.getItem("timebox_settings");
+applyDark();
 
-  if(saved){
 
-    try{
-      settings={
-        ...settings,
-        ...JSON.parse(saved)
-      };
-    }catch(e){}
+/* =========================================================
+   時計
+========================================================= */
 
+function updateClock() {
+
+  const now = new Date();
+
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const s = now.getSeconds();
+
+  let displayHour;
+
+  if (settings.hour24) {
+    displayHour = String(h).padStart(2, "0");
+  } else {
+    const hh = h % 12 || 12;
+    displayHour = String(hh).padStart(2, "0");
   }
 
-  document.documentElement.style.setProperty(
-    "--accent",
-    settings.accent
-  );
+  const secondsText = settings.seconds
+    ? ":" + String(s).padStart(2, "0")
+    : "";
 
-  document.documentElement.style.setProperty(
-    "--accent2",
-    settings.accent2
-  );
+  $("clockTime").textContent =
+    `${displayHour}:${String(m).padStart(2, "0")}${secondsText}`;
 
-  document.getElementById("format24").checked=settings.format24;
-  document.getElementById("showSeconds").checked=settings.showSeconds;
+  $("clockShort").textContent =
+    `${displayHour}:${String(m).padStart(2, "0")}`;
 
-  if(localStorage.getItem("timebox_dark")==="true"){
-    document.body.classList.add("dark");
-  }
+  $("clockDate").textContent =
+    now.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+
+  $("clockWeek").textContent =
+    DAYS[now.getDay()] + "曜日";
+
+  $("clockYear").textContent = now.getFullYear();
+
+  const elapsed =
+    h * 3600 +
+    m * 60 +
+    s;
+
+  const progress =
+    elapsed / 86400 * 100;
+
+  $("dayProgress").style.width =
+    progress + "%";
+
+  const remain =
+    86400 - elapsed;
+
+  const rh = Math.floor(remain / 3600);
+  const rm = Math.floor((remain % 3600) / 60);
+
+  $("remaining").textContent =
+    `今日の残り ${rh}時間${rm}分`;
 }
 
-function saveSettings(){
-
-  settings.format24=
-    document.getElementById("format24").checked;
-
-  settings.showSeconds=
-    document.getElementById("showSeconds").checked;
-
-  localStorage.setItem(
-    "timebox_settings",
-    JSON.stringify(settings)
-  );
-}
-
-function setTheme(accent,accent2){
-
-  settings.accent=accent;
-  settings.accent2=accent2;
-
-  document.documentElement.style.setProperty("--accent",accent);
-  document.documentElement.style.setProperty("--accent2",accent2);
-
-  saveSettings();
-}
-
-function toggleDark(){
-
-  document.body.classList.toggle("dark");
-
-  localStorage.setItem(
-    "timebox_dark",
-    document.body.classList.contains("dark")
-  );
-}
+setInterval(updateClock, 1000);
+updateClock();
 
 
-/* =====================================================
-   PAGE
-===================================================== */
+/* =========================================================
+   カレンダー
+========================================================= */
 
-function showPage(id,btn){
-
-  document.querySelectorAll(".page")
-    .forEach(x=>x.classList.remove("active"));
-
-  document.getElementById(id)
-    .classList.add("active");
-
-  document.querySelectorAll("nav button")
-    .forEach(x=>x.classList.remove("active"));
-
-  btn.classList.add("active");
-
-  if(id==="schedule"){
-    renderCalendar();
-  }
-}
-
-
-/* =====================================================
-   CLOCK
-===================================================== */
-
-function updateClock(){
-
-  const now=new Date();
-
-  let hour=now.getHours();
-
-  if(!settings.format24){
-    hour=hour%12 || 12;
-  }
-
-  const hh=String(hour).padStart(2,"0");
-  const mm=String(now.getMinutes()).padStart(2,"0");
-  const ss=String(now.getSeconds()).padStart(2,"0");
-
-  document.getElementById("mainTime").textContent=
-    settings.showSeconds
-    ? `${hh}:${mm}:${ss}`
-    : `${hh}:${mm}`;
-
-  const days=[
-    "日","月","火","水","木","金","土"
-  ];
-
-  document.getElementById("mainDate").textContent=
-    `${now.getFullYear()}年`+
-    `${now.getMonth()+1}月`+
-    `${now.getDate()}日`+
-    ` (${days[now.getDay()]})`;
-
-  const midnight=new Date(now);
-  midnight.setHours(24,0,0,0);
-
-  const remain=Math.max(0,midnight-now)/1000;
-
-  document.getElementById("remaining").textContent=
-    `今日の残り時間：${formatHMS(remain)}`;
-
-  const start=new Date(now);
-  start.setHours(0,0,0,0);
-
-  const progress=((now-start)/(midnight-start))*100;
-
-  document.getElementById("dayProgress").textContent=
-    progress.toFixed(1)+"%";
-
-  document.getElementById("todayInfo").textContent=
-    `現在 ${now.toLocaleTimeString("ja-JP")}`;
-
-  if(document.getElementById("schedule").classList.contains("active")){
-    updateCurrentCalendarLine();
-  }
-}
-
-function formatHMS(sec){
-
-  sec=Math.max(0,Math.floor(sec));
-
-  const h=Math.floor(sec/3600);
-  const m=Math.floor((sec%3600)/60);
-  const s=sec%60;
-
-  return `${String(h).padStart(2,"0")}:`+
-         `${String(m).padStart(2,"0")}:`+
-         `${String(s).padStart(2,"0")}`;
-}
-
-setInterval(updateClock,250);
-
-
-/* =====================================================
-   CALENDAR DATA
-===================================================== */
-
-let calendarOffset=0;
-let calendarView="week";
-
-let events=[];
-
-try{
-  events=JSON.parse(
-    localStorage.getItem("timebox_events")||"[]"
-  );
-}catch(e){
-  events=[];
-}
-
-let editingEventId=null;
-let selectedEventColor="#1677ff";
-
-
-function dateKey(date){
-
-  const y=date.getFullYear();
-
-  const m=String(date.getMonth()+1).padStart(2,"0");
-
-  const d=String(date.getDate()).padStart(2,"0");
+function dateKey(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
 
   return `${y}-${m}-${d}`;
 }
 
-function parseDate(key){
-
-  const [y,m,d]=key.split("-").map(Number);
-
-  return new Date(y,m-1,d);
+function getSunday(date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - d.getDay());
+  return d;
 }
 
-function getMonday(offset=0){
-
-  const date=new Date();
-
-  date.setHours(0,0,0,0);
-
-  const day=date.getDay();
-
-  const diff=day===0?-6:1-day;
-
-  date.setDate(
-    date.getDate()+diff+(offset*7)
-  );
-
-  return date;
+function timeToMinutes(time) {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
 }
 
-function changeCalendar(amount){
-
-  if(calendarView==="week"){
-    calendarOffset+=amount;
-  }
-
-  if(calendarView==="day"){
-    calendarOffset+=amount;
-  }
-
-  if(calendarView==="month"){
-    calendarOffset+=amount;
-  }
-
-  renderCalendar();
+function minutesToTop(minutes) {
+  return minutes;
 }
 
-function goToday(){
+function renderCalendar() {
 
-  calendarOffset=0;
-  renderCalendar();
-}
+  const sunday = getSunday(calendarDate);
 
-function setCalendarView(view){
+  const end = new Date(sunday);
+  end.setDate(end.getDate() + 6);
 
-  calendarView=view;
+  $("weekTitle").textContent =
+    `${sunday.getFullYear()}/${sunday.getMonth()+1}/${sunday.getDate()}`
+    + " ～ "
+    + `${end.getFullYear()}/${end.getMonth()+1}/${end.getDate()}`;
 
-  document.getElementById("dayViewButton")
-    .classList.toggle("active",view==="day");
+  const headers = document.querySelector(".calendar-head[style*='display:contents']");
+  const dayHeaders = $("dayHeaders");
 
-  document.getElementById("weekViewButton")
-    .classList.toggle("active",view==="week");
+  dayHeaders.innerHTML = "";
 
-  document.getElementById("monthViewButton")
-    .classList.toggle("active",view==="month");
+  const blank = document.createElement("div");
+  blank.className = "calendar-head";
+  dayHeaders.appendChild(blank);
 
-  renderCalendar();
-}
+  for (let i = 0; i < 7; i++) {
 
-function renderCalendar(){
+    const d = new Date(sunday);
+    d.setDate(d.getDate() + i);
 
-  document.getElementById("weekCalendar").style.display=
-    calendarView==="week" ? "block" : "none";
+    const head = document.createElement("div");
+    head.className = "day-head";
 
-  document.getElementById("dayCalendar").style.display=
-    calendarView==="day" ? "block" : "none";
+    const today = dateKey(d) === dateKey(new Date());
 
-  document.getElementById("monthCalendar").style.display=
-    calendarView==="month" ? "block" : "none";
+    head.innerHTML = `
+      <div class="day-name">${DAYS[d.getDay()]}曜日</div>
+      <div class="day-number ${today ? "today-number" : ""}">
+        ${d.getDate()}
+      </div>
+    `;
 
-  if(calendarView==="week"){
-    renderWeek();
-  }
-
-  if(calendarView==="day"){
-    renderDay();
-  }
-
-  if(calendarView==="month"){
-    renderMonth();
-  }
-}
-
-
-/* =====================================================
-   WEEK
-===================================================== */
-
-function renderWeek(){
-
-  const container=document.getElementById("weekCalendar");
-
-  container.innerHTML="";
-
-  const monday=getMonday(calendarOffset);
-
-  const sunday=new Date(monday);
-  sunday.setDate(sunday.getDate()+6);
-
-  document.getElementById("calendarRange").textContent=
-    `${monday.getFullYear()}/${monday.getMonth()+1}/${monday.getDate()}`+
-    ` ～ `+
-    `${sunday.getFullYear()}/${sunday.getMonth()+1}/${sunday.getDate()}`;
-
-  const wrapper=document.createElement("div");
-  wrapper.className="week-calendar";
-
-  const headEmpty=document.createElement("div");
-  headEmpty.className="time-head week-head";
-  wrapper.appendChild(headEmpty);
-
-  const names=[
-    "月","火","水","木","金","土","日"
-  ];
-
-  for(let i=0;i<7;i++){
-
-    const date=new Date(monday);
-    date.setDate(date.getDate()+i);
-
-    const head=document.createElement("div");
-
-    head.className="day-head week-head";
-
-    if(dateKey(date)===dateKey(new Date())){
-      head.classList.add("today");
-    }
-
-    head.innerHTML=
-      `<div class="day-head-name">${names[i]}</div>`+
-      `<div class="day-head-number">${date.getDate()}</div>`;
-
-    head.onclick=()=>{
-      openEventModal(dateKey(date));
+    head.onclick = () => {
+      openEventModal(null, dateKey(d), "09:00");
     };
 
-    wrapper.appendChild(head);
+    dayHeaders.appendChild(head);
   }
 
+  const body = $("calendarBody");
+  body.innerHTML = "";
 
-  /* 時間列 */
+  const timeColumn = document.createElement("div");
 
-  const timeColumn=document.createElement("div");
-  timeColumn.className="time-column";
+  for (let h = 0; h < 24; h++) {
 
-  for(let h=0;h<24;h++){
-
-    const label=document.createElement("div");
-    label.className="time-label";
-
-    label.innerHTML=
-      `<span>${String(h).padStart(2,"0")}:00</span>`;
+    const label = document.createElement("div");
+    label.className = "time-label";
+    label.textContent = `${String(h).padStart(2, "0")}:00`;
 
     timeColumn.appendChild(label);
   }
 
-  wrapper.appendChild(timeColumn);
+  body.appendChild(timeColumn);
 
+  for (let i = 0; i < 7; i++) {
 
-  /* 7日 */
+    const d = new Date(sunday);
+    d.setDate(d.getDate() + i);
 
-  for(let i=0;i<7;i++){
+    const key = dateKey(d);
 
-    const date=new Date(monday);
-    date.setDate(date.getDate()+i);
+    const column = document.createElement("div");
+    column.className = "day-column";
+    column.dataset.date = key;
 
-    const column=document.createElement("div");
-    column.className="day-column";
+    for (let h = 0; h < 24; h++) {
 
-    if(dateKey(date)===dateKey(new Date())){
-      column.classList.add("today");
+      const clickArea = document.createElement("div");
+
+      clickArea.className = "hour-click";
+      clickArea.style.top = `${h * 60}px`;
+
+      clickArea.onclick = e => {
+
+        if (e.target !== clickArea) return;
+
+        const rect = clickArea.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+
+        let minutes =
+          h * 60 + Math.round(y);
+
+        minutes =
+          Math.round(minutes / 15) * 15;
+
+        if (minutes >= 1440) {
+          minutes = 1439;
+        }
+
+        const hh =
+          String(Math.floor(minutes / 60)).padStart(2, "0");
+
+        const mm =
+          String(minutes % 60).padStart(2, "0");
+
+        openEventModal(null, key, `${hh}:${mm}`);
+      };
+
+      column.appendChild(clickArea);
     }
 
-    for(let h=1;h<24;h++){
+    const dayEvents =
+      events.filter(e => e.date === key);
 
-      const line=document.createElement("div");
-      line.className="hour-line";
-      line.style.top=`${h*60}px`;
+    renderDayEvents(column, dayEvents);
+
+    if (key === dateKey(new Date())) {
+
+      const now = new Date();
+
+      const line = document.createElement("div");
+      line.className = "current-line";
+
+      line.style.top =
+        `${now.getHours() * 60 + now.getMinutes()}px`;
+
+      line.innerHTML =
+        `<div class="current-dot"></div>`;
 
       column.appendChild(line);
     }
 
-    const dayEvents=events
-      .filter(e=>e.date===dateKey(date))
-      .sort((a,b)=>timeToMinutes(a.start)-timeToMinutes(b.start));
+    body.appendChild(column);
+  }
+}
 
-    renderEventsInColumn(column,dayEvents);
 
-    if(dateKey(date)===dateKey(new Date())){
-      addCurrentLine(column);
+/* =========================================================
+   重なった予定を横並びにする
+========================================================= */
+
+function renderDayEvents(column, dayEvents) {
+
+  const sorted = [...dayEvents].sort(
+    (a, b) =>
+      timeToMinutes(a.start) -
+      timeToMinutes(b.start)
+  );
+
+  const groups = [];
+
+  sorted.forEach(event => {
+
+    const start = timeToMinutes(event.start);
+    const end = timeToMinutes(event.end);
+
+    let group = groups.find(g =>
+      g.some(other =>
+        start < timeToMinutes(other.end) &&
+        end > timeToMinutes(other.start)
+      )
+    );
+
+    if (!group) {
+      group = [];
+      groups.push(group);
     }
 
-    column.addEventListener("dblclick",e=>{
+    group.push(event);
+  });
 
-      if(e.target!==column)return;
+  groups.forEach(group => {
 
-      const rect=column.getBoundingClientRect();
+    const columns = [];
 
-      const y=e.clientY-rect.top;
+    group.forEach(event => {
 
-      let minutes=Math.floor(y);
+      const start = timeToMinutes(event.start);
+      const end = timeToMinutes(event.end);
 
-      minutes=Math.floor(minutes/15)*15;
+      let col = 0;
 
-      if(minutes>=1440)minutes=1430;
+      while (
+        columns[col] &&
+        columns[col].some(other =>
+          start < timeToMinutes(other.end) &&
+          end > timeToMinutes(other.start)
+        )
+      ) {
+        col++;
+      }
 
-      const h=Math.floor(minutes/60);
-      const m=minutes%60;
+      if (!columns[col]) {
+        columns[col] = [];
+      }
 
-      const start=
-        `${String(h).padStart(2,"0")}:`+
-        `${String(m).padStart(2,"0")}`;
-
-      const endMinutes=Math.min(minutes+60,1439);
-
-      const eh=Math.floor(endMinutes/60);
-      const em=endMinutes%60;
-
-      openEventModal(
-        dateKey(date),
-        null,
-        start,
-        `${String(eh).padStart(2,"0")}:${String(em).padStart(2,"0")}`
-      );
+      columns[col].push(event);
+      event.__col = col;
     });
 
-    wrapper.appendChild(column);
-  }
+    const totalColumns = columns.length;
 
-  container.appendChild(wrapper);
+    group.forEach(event => {
 
-  setTimeout(()=>{
-    scrollCalendarToNow();
-  },50);
-}
+      const start = timeToMinutes(event.start);
+      const end = Math.max(
+        timeToMinutes(event.end),
+        start + 15
+      );
 
+      const el = document.createElement("div");
 
-/* =====================================================
-   DAY
-===================================================== */
+      el.className = "event";
 
-function renderDay(){
+      el.style.top =
+        `${minutesToTop(start)}px`;
 
-  const container=document.getElementById("dayCalendar");
+      el.style.height =
+        `${Math.max(end - start, 20)}px`;
 
-  container.innerHTML="";
+      el.style.left =
+        `calc(${event.__col} * ${100 / totalColumns}% + 2px)`;
 
-  const base=new Date();
-  base.setHours(0,0,0,0);
+      el.style.width =
+        `calc(${100 / totalColumns}% - 4px)`;
 
-  base.setDate(
-    base.getDate()+calendarOffset
-  );
+      el.innerHTML = `
+        <div class="event-title">
+          ${escapeHTML(event.name)}
+        </div>
+        <div class="event-time">
+          ${event.start} - ${event.end}
+        </div>
+      `;
 
-  document.getElementById("calendarRange").textContent=
-    `${base.getFullYear()}年`+
-    `${base.getMonth()+1}月`+
-    `${base.getDate()}日`;
-
-  const grid=document.createElement("div");
-  grid.className="day-calendar-grid";
-
-  const times=document.createElement("div");
-  times.className="time-column";
-
-  for(let h=0;h<24;h++){
-
-    const label=document.createElement("div");
-    label.className="time-label";
-
-    label.innerHTML=
-      `<span>${String(h).padStart(2,"0")}:00</span>`;
-
-    times.appendChild(label);
-  }
-
-  grid.appendChild(times);
-
-  const right=document.createElement("div");
-
-  const head=document.createElement("div");
-  head.className="day-single-head";
-
-  const names=[
-    "日","月","火","水","木","金","土"
-  ];
-
-  head.textContent=
-    `${names[base.getDay()]}曜日 ${base.getMonth()+1}/${base.getDate()}`;
-
-  right.appendChild(head);
-
-  const column=document.createElement("div");
-  column.className="day-column-single";
-
-  for(let h=1;h<24;h++){
-
-    const line=document.createElement("div");
-    line.className="hour-line";
-    line.style.top=`${h*60}px`;
-
-    column.appendChild(line);
-  }
-
-  const dayEvents=events
-    .filter(e=>e.date===dateKey(base))
-    .sort((a,b)=>timeToMinutes(a.start)-timeToMinutes(b.start));
-
-  renderEventsInColumn(column,dayEvents);
-
-  if(dateKey(base)===dateKey(new Date())){
-    addCurrentLine(column);
-  }
-
-  column.addEventListener("dblclick",e=>{
-
-    if(e.target!==column)return;
-
-    const rect=column.getBoundingClientRect();
-
-    let minutes=Math.floor(e.clientY-rect.top);
-
-    minutes=Math.floor(minutes/15)*15;
-
-    if(minutes>=1440)minutes=1430;
-
-    const h=Math.floor(minutes/60);
-    const m=minutes%60;
-
-    openEventModal(
-      dateKey(base),
-      null,
-      `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`,
-      `${String(Math.floor((minutes+60)/60)).padStart(2,"0")}:${String((minutes+60)%60).padStart(2,"0")}`
-    );
-  });
-
-  right.appendChild(column);
-
-  grid.appendChild(right);
-
-  container.appendChild(grid);
-
-  setTimeout(scrollCalendarToNow,50);
-}
-
-
-/* =====================================================
-   MONTH
-===================================================== */
-
-function renderMonth(){
-
-  const container=document.getElementById("monthCalendar");
-
-  container.innerHTML="";
-
-  const now=new Date();
-
-  const first=new Date(
-    now.getFullYear(),
-    now.getMonth()+calendarOffset,
-    1
-  );
-
-  const year=first.getFullYear();
-  const month=first.getMonth();
-
-  const last=new Date(year,month+1,0);
-
-  document.getElementById("calendarRange").textContent=
-    `${year}年${month+1}月`;
-
-  const grid=document.createElement("div");
-  grid.className="month-grid";
-
-  const names=[
-    "月","火","水","木","金","土","日"
-  ];
-
-  names.forEach(name=>{
-
-    const el=document.createElement("div");
-    el.className="month-weekday";
-    el.textContent=name;
-
-    grid.appendChild(el);
-  });
-
-  let firstDay=first.getDay();
-
-  firstDay=firstDay===0?6:firstDay-1;
-
-  const totalCells=
-    Math.ceil((firstDay+last.getDate())/7)*7;
-
-  for(let i=0;i<totalCells;i++){
-
-    const dayNumber=
-      i-firstDay+1;
-
-    const date=new Date(year,month,dayNumber);
-
-    const cell=document.createElement("div");
-    cell.className="month-day";
-
-    if(date.getMonth()!==month){
-      cell.classList.add("other-month");
-    }
-
-    if(dateKey(date)===dateKey(new Date())){
-      cell.classList.add("today");
-    }
-
-    const number=document.createElement("div");
-    number.className="month-number";
-    number.textContent=date.getDate();
-
-    cell.appendChild(number);
-
-    cell.onclick=()=>{
-      openEventModal(dateKey(date));
-    };
-
-    const dayEvents=events
-      .filter(e=>e.date===dateKey(date))
-      .sort((a,b)=>timeToMinutes(a.start)-timeToMinutes(b.start));
-
-    dayEvents.slice(0,5).forEach(e=>{
-
-      const event=document.createElement("button");
-      event.className="month-event";
-      event.style.background=e.color||settings.accent;
-
-      event.textContent=
-        `${e.start} ${e.name}`;
-
-      event.onclick=(ev)=>{
-        ev.stopPropagation();
-        openEventModal(null,e.id);
+      el.onclick = e => {
+        e.stopPropagation();
+        openEventModal(event);
       };
 
-      cell.appendChild(event);
+      column.appendChild(el);
     });
-
-    if(dayEvents.length>5){
-
-      const more=document.createElement("div");
-
-      more.style.fontSize="10px";
-      more.style.color="var(--muted)";
-      more.textContent=
-        `＋${dayEvents.length-5}件`;
-
-      cell.appendChild(more);
-    }
-
-    grid.appendChild(cell);
-  }
-
-  container.appendChild(grid);
-}
-
-
-/* =====================================================
-   EVENTS
-===================================================== */
-
-function renderEventsInColumn(column,dayEvents){
-
-  const groups=[];
-
-  dayEvents.forEach(event=>{
-
-    const start=timeToMinutes(event.start);
-    const end=Math.max(
-      start+30,
-      timeToMinutes(event.end)
-    );
-
-    let placed=false;
-
-    for(const group of groups){
-
-      const overlaps=group.some(other=>{
-
-        const otherStart=timeToMinutes(other.start);
-        const otherEnd=Math.max(
-          otherStart+30,
-          timeToMinutes(other.end)
-        );
-
-        return start<otherEnd && end>otherStart;
-      });
-
-      if(!overlaps){
-
-        group.push(event);
-        placed=true;
-        break;
-      }
-    }
-
-    if(!placed){
-      groups.push([event]);
-    }
-  });
-
-
-  dayEvents.forEach(event=>{
-
-    let groupIndex=0;
-    let group=null;
-
-    for(let i=0;i<groups.length;i++){
-
-      if(groups[i].includes(event)){
-        groupIndex=i;
-        group=groups[i];
-        break;
-      }
-    }
-
-    const start=timeToMinutes(event.start);
-
-    let end=timeToMinutes(event.end);
-
-    if(end<=start){
-      end=start+60;
-    }
-
-    const div=document.createElement("div");
-
-    div.className="calendar-event";
-
-    div.style.top=`${start}px`;
-
-    div.style.height=
-      `${Math.max(30,end-start)}px`;
-
-    const count=group ? group.length : 1;
-
-    const index=group ? group.indexOf(event) : 0;
-
-    div.style.width=
-      `calc(${100/count}% - 5px)`;
-
-    div.style.left=
-      `calc(${index*100/count}% + 3px)`;
-
-    div.style.right="auto";
-
-    div.style.background=
-      event.color || settings.accent;
-
-    div.innerHTML=
-      `<div class="calendar-event-title">
-        ${escapeHTML(event.name)}
-      </div>
-      <div class="calendar-event-time">
-        ${event.start}～${event.end}
-      </div>`;
-
-    div.onclick=()=>{
-      openEventModal(null,event.id);
-    };
-
-    column.appendChild(div);
   });
 }
 
+function escapeHTML(str) {
 
-/* =====================================================
-   CURRENT LINE
-===================================================== */
-
-function addCurrentLine(column){
-
-  const now=new Date();
-
-  const minutes=
-    now.getHours()*60+
-    now.getMinutes()+
-    now.getSeconds()/60;
-
-  const line=document.createElement("div");
-
-  line.className="current-line";
-
-  line.style.top=`${minutes}px`;
-
-  const dot=document.createElement("div");
-
-  dot.className="current-dot";
-
-  line.appendChild(dot);
-
-  column.appendChild(line);
-}
-
-function updateCurrentCalendarLine(){
-
-  if(!document.getElementById("schedule").classList.contains("active")){
-    return;
-  }
-
-  const old=document.querySelectorAll(".current-line");
-
-  old.forEach(x=>x.remove());
-
-  if(calendarView==="week"){
-
-    document.querySelectorAll(".day-column.today")
-      .forEach(column=>{
-        addCurrentLine(column);
-      });
-  }
-
-  if(calendarView==="day"){
-
-    const date=new Date();
-
-    date.setHours(0,0,0,0);
-    date.setDate(date.getDate()+calendarOffset);
-
-    if(dateKey(date)===dateKey(new Date())){
-
-      const column=
-        document.querySelector(".day-column-single");
-
-      if(column){
-        addCurrentLine(column);
-      }
-    }
-  }
-}
-
-function scrollCalendarToNow(){
-
-  if(calendarView==="month")return;
-
-  const scroll=
-    calendarView==="week"
-    ? document.getElementById("weekCalendar")
-    : document.getElementById("dayCalendar");
-
-  if(!scroll)return;
-
-  const now=new Date();
-
-  const target=
-    Math.max(
-      0,
-      now.getHours()*60-180
-    );
-
-  scroll.scrollTop=target;
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 
-/* =====================================================
-   EVENT MODAL
-===================================================== */
+/* =========================================================
+   カレンダー操作
+========================================================= */
 
-function openEventModal(date=null,id=null,start=null,end=null){
+$("prevWeek").onclick = () => {
+  calendarDate.setDate(calendarDate.getDate() - 7);
+  renderCalendar();
+};
 
-  editingEventId=id;
+$("nextWeek").onclick = () => {
+  calendarDate.setDate(calendarDate.getDate() + 7);
+  renderCalendar();
+};
 
-  const modal=document.getElementById("eventModal");
+$("todayWeek").onclick = () => {
+  calendarDate = new Date();
+  renderCalendar();
+};
 
-  const deleteButton=
-    document.getElementById("deleteEventButton");
+$("calendarAdd").onclick =
+  () => openEventModal();
 
-  if(id){
 
-    const event=events.find(e=>e.id===id);
+$("headerAdd").onclick = () => {
 
-    if(!event)return;
+  document.querySelector('[data-page="schedule"]').click();
 
-    document.getElementById("modalTitle")
-      .textContent="✏️ 予定を編集";
+  openEventModal();
+};
 
-    document.getElementById("eventName").value=event.name;
-    document.getElementById("eventDate").value=event.date;
-    document.getElementById("eventStart").value=event.start;
-    document.getElementById("eventEnd").value=event.end;
 
-    selectedEventColor=event.color||settings.accent;
+/* =========================================================
+   予定モーダル
+========================================================= */
 
-    deleteButton.style.display="block";
+function openEventModal(event = null, date = null, start = "09:00") {
 
-  }else{
+  editingEventId = event ? event.id : null;
 
-    document.getElementById("modalTitle")
-      .textContent="＋ 予定を追加";
+  $("modalTitle").textContent =
+    event ? "予定を編集" : "予定を追加";
 
-    document.getElementById("eventName").value="";
+  $("eventName").value =
+    event ? event.name : "";
 
-    document.getElementById("eventDate").value=
-      date || dateKey(new Date());
+  $("eventDate").value =
+    event ? event.date : (date || dateKey(new Date()));
 
-    document.getElementById("eventStart").value=
-      start || "09:00";
+  $("eventStart").value =
+    event ? event.start : start;
 
-    document.getElementById("eventEnd").value=
-      end || "10:00";
-
-    selectedEventColor=settings.accent;
-
-    deleteButton.style.display="none";
-  }
-
-  updateColorButtons();
-
-  modal.classList.add("show");
-
-  setTimeout(()=>{
-    document.getElementById("eventName").focus();
-  },50);
-}
-
-function updateColorButtons(){
-
-  document.querySelectorAll(".color-option")
-    .forEach(button=>{
-
-      button.classList.toggle(
-        "selected",
-        button.dataset.color===selectedEventColor
+  $("eventEnd").value =
+    event ? event.end :
+    (() => {
+      const mins = Math.min(
+        timeToMinutes(start) + 60,
+        1439
       );
 
-    });
+      return `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
+    })();
+
+  $("deleteEvent").style.display =
+    event ? "block" : "none";
+
+  $("eventModal").classList.add("show");
+  $("eventName").focus();
 }
 
-function selectEventColor(color){
+$("cancelEvent").onclick = () => {
+  $("eventModal").classList.remove("show");
+};
 
-  selectedEventColor=color;
+$("eventModal").addEventListener("click", e => {
+  if (e.target === $("eventModal")) {
+    $("eventModal").classList.remove("show");
+  }
+});
 
-  updateColorButtons();
-}
 
-function closeEventModal(){
+$("saveEvent").onclick = () => {
 
-  document.getElementById("eventModal")
-    .classList.remove("show");
+  const name = $("eventName").value.trim();
+  const date = $("eventDate").value;
+  const start = $("eventStart").value;
+  const end = $("eventEnd").value;
 
-  editingEventId=null;
-}
-
-function saveEvent(){
-
-  const name=
-    document.getElementById("eventName").value.trim();
-
-  const date=
-    document.getElementById("eventDate").value;
-
-  const start=
-    document.getElementById("eventStart").value;
-
-  const end=
-    document.getElementById("eventEnd").value;
-
-  if(!name){
-
-    alert("予定の名前を入力してください");
-
+  if (!name) {
+    alert("予定名を入力してください");
     return;
   }
 
-  if(!date||!start||!end){
-
+  if (!date || !start || !end) {
     alert("日付と時間を入力してください");
-
     return;
   }
 
-  if(editingEventId){
+  if (timeToMinutes(end) <= timeToMinutes(start)) {
+    alert("終了時間は開始時間より後にしてください");
+    return;
+  }
 
-    const event=events.find(
-      e=>e.id===editingEventId
+  if (editingEventId) {
+
+    const event = events.find(
+      x => x.id === editingEventId
     );
 
-    if(event){
-
-      event.name=name;
-      event.date=date;
-      event.start=start;
-      event.end=end;
-      event.color=selectedEventColor;
+    if (event) {
+      event.name = name;
+      event.date = date;
+      event.start = start;
+      event.end = end;
     }
 
-  }else{
+  } else {
 
     events.push({
-
-      id:Date.now(),
-
+      id: Date.now().toString(),
       name,
-
       date,
-
       start,
-
-      end,
-
-      color:selectedEventColor
-
+      end
     });
   }
-
-  saveEvents();
-
-  closeEventModal();
-
-  renderCalendar();
-}
-
-function deleteEditingEvent(){
-
-  if(!editingEventId)return;
-
-  if(!confirm("この予定を削除しますか？")){
-    return;
-  }
-
-  events=events.filter(
-    e=>e.id!==editingEventId
-  );
-
-  saveEvents();
-
-  closeEventModal();
-
-  renderCalendar();
-}
-
-function saveEvents(){
 
   localStorage.setItem(
     "timebox_events",
     JSON.stringify(events)
   );
+
+  $("eventModal").classList.remove("show");
+
+  renderCalendar();
+};
+
+
+$("deleteEvent").onclick = () => {
+
+  if (!editingEventId) return;
+
+  if (!confirm("この予定を削除しますか？")) return;
+
+  events =
+    events.filter(x => x.id !== editingEventId);
+
+  localStorage.setItem(
+    "timebox_events",
+    JSON.stringify(events)
+  );
+
+  $("eventModal").classList.remove("show");
+
+  renderCalendar();
+};
+
+
+/* =========================================================
+   タイマー
+========================================================= */
+
+let timerSeconds = 300;
+let timerRunning = false;
+let timerInterval = null;
+
+function renderTimer() {
+
+  const min =
+    Math.floor(timerSeconds / 60);
+
+  const sec =
+    timerSeconds % 60;
+
+  $("timerDisplay").textContent =
+    `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
-function timeToMinutes(time){
+document.querySelectorAll(".presets button")
+  .forEach(btn => {
 
-  const parts=time.split(":").map(Number);
+    btn.onclick = () => {
 
-  return parts[0]*60+parts[1];
-}
+      timerSeconds =
+        Number(btn.dataset.min) * 60;
 
-function escapeHTML(text){
+      timerRunning = false;
 
-  const div=document.createElement("div");
+      clearInterval(timerInterval);
 
-  div.textContent=text;
+      renderTimer();
+    };
+  });
 
-  return div.innerHTML;
-}
 
+$("setTimer").onclick = () => {
 
-/* =====================================================
-   TIMER
-===================================================== */
+  const min =
+    Number($("timerMin").value || 0);
 
-let timerSeconds=300;
-let timerInterval=null;
+  const sec =
+    Number($("timerSec").value || 0);
 
-function updateTimer(){
+  timerSeconds =
+    min * 60 + sec;
 
-  const m=Math.floor(timerSeconds/60);
-  const s=timerSeconds%60;
-
-  document.getElementById("timerDisplay").textContent=
-    `${String(m).padStart(2,"0")}:`+
-    `${String(s).padStart(2,"0")}`;
-}
-
-function setTimer(seconds){
-
-  pauseTimer();
-
-  timerSeconds=seconds;
-
-  updateTimer();
-}
-
-function customTimer(){
-
-  pauseTimer();
-
-  const min=parseInt(
-    document.getElementById("timerMin").value
-  )||0;
-
-  const sec=parseInt(
-    document.getElementById("timerSec").value
-  )||0;
-
-  timerSeconds=Math.max(0,min*60+sec);
-
-  updateTimer();
-}
-
-function startTimer(){
-
-  if(timerInterval||timerSeconds<=0)return;
-
-  timerInterval=setInterval(()=>{
-
-    timerSeconds--;
-
-    updateTimer();
-
-    if(timerSeconds<=0){
-
-      pauseTimer();
-
-      alert("⏰ タイマー終了！");
-
-      beep();
-    }
-
-  },1000);
-}
-
-function pauseTimer(){
+  timerRunning = false;
 
   clearInterval(timerInterval);
 
-  timerInterval=null;
+  renderTimer();
+};
+
+
+$("timerStart").onclick = () => {
+
+  if (timerRunning || timerSeconds <= 0) return;
+
+  timerRunning = true;
+
+  timerInterval = setInterval(() => {
+
+    timerSeconds--;
+
+    renderTimer();
+
+    if (timerSeconds <= 0) {
+
+      clearInterval(timerInterval);
+      timerRunning = false;
+
+      alert("タイマー終了！");
+    }
+
+  }, 1000);
+};
+
+
+$("timerPause").onclick = () => {
+
+  timerRunning = false;
+  clearInterval(timerInterval);
+};
+
+
+$("timerReset").onclick = () => {
+
+  timerRunning = false;
+  clearInterval(timerInterval);
+
+  timerSeconds = 300;
+
+  renderTimer();
+};
+
+renderTimer();
+
+
+/* =========================================================
+   ストップウォッチ
+========================================================= */
+
+let swRunning = false;
+let swStartTime = 0;
+let swElapsed = 0;
+let swInterval = null;
+let lapTimes = [];
+
+function renderStopwatch() {
+
+  const total =
+    swElapsed;
+
+  const minutes =
+    Math.floor(total / 60000);
+
+  const seconds =
+    Math.floor((total % 60000) / 1000);
+
+  const centis =
+    Math.floor((total % 1000) / 10);
+
+  $("stopwatchDisplay").textContent =
+    `${String(minutes).padStart(2,"0")}:`
+    + `${String(seconds).padStart(2,"0")}.`
+    + `${String(centis).padStart(2,"0")}`;
 }
 
-function resetTimer(){
+$("swStart").onclick = () => {
 
-  pauseTimer();
+  if (!swRunning) {
 
-  timerSeconds=300;
+    swRunning = true;
 
-  updateTimer();
+    swStartTime =
+      Date.now() - swElapsed;
+
+    swInterval = setInterval(() => {
+
+      swElapsed =
+        Date.now() - swStartTime;
+
+      renderStopwatch();
+
+    }, 10);
+
+    $("swStart").textContent = "一時停止";
+
+  } else {
+
+    swRunning = false;
+
+    clearInterval(swInterval);
+
+    swElapsed =
+      Date.now() - swStartTime;
+
+    renderStopwatch();
+
+    $("swStart").textContent = "開始";
+  }
+};
+
+
+$("swLap").onclick = () => {
+
+  if (!swRunning) return;
+
+  lapTimes.push(swElapsed);
+
+  const el = document.createElement("div");
+
+  el.className = "list-item";
+
+  el.innerHTML = `
+    <span>ラップ ${lapTimes.length}</span>
+    <b>${formatSW(swElapsed)}</b>
+  `;
+
+  $("laps").prepend(el);
+};
+
+
+function formatSW(ms) {
+
+  const min =
+    Math.floor(ms / 60000);
+
+  const sec =
+    Math.floor((ms % 60000) / 1000);
+
+  const cs =
+    Math.floor((ms % 1000) / 10);
+
+  return `${String(min).padStart(2,"0")}:${String(sec).padStart(2,"0")}.${String(cs).padStart(2,"0")}`;
 }
 
 
-/* =====================================================
-   STOPWATCH
-===================================================== */
+$("swReset").onclick = () => {
 
-let stopwatchElapsed=0;
-let stopwatchStart=0;
-let stopwatchInterval=null;
+  swRunning = false;
 
-function updateStopwatch(){
+  clearInterval(swInterval);
 
-  const sec=Math.floor(stopwatchElapsed/1000);
+  swElapsed = 0;
+  lapTimes = [];
 
-  const ms=Math.floor(
-    (stopwatchElapsed%1000)/10
-  );
+  $("laps").innerHTML = "";
 
-  const min=Math.floor(sec/60);
+  $("swStart").textContent = "開始";
 
-  const seconds=sec%60;
+  renderStopwatch();
+};
 
-  document.getElementById("stopwatchDisplay")
-    .textContent=
-      `${String(min).padStart(2,"0")}:`+
-      `${String(seconds).padStart(2,"0")}.`+
-      `${String(ms).padStart(2,"0")}`;
+renderStopwatch();
+
+
+/* =========================================================
+   アラーム
+========================================================= */
+
+function renderAlarms() {
+
+  $("alarmList").innerHTML = "";
+
+  if (!alarms.length) {
+
+    $("alarmList").innerHTML =
+      `<div class="muted center">アラームはありません</div>`;
+
+    return;
+  }
+
+  alarms.forEach(alarm => {
+
+    const el = document.createElement("div");
+
+    el.className = "list-item";
+
+    el.innerHTML = `
+      <div>
+        <b style="font-size:22px">${alarm.time}</b>
+      </div>
+
+      <div class="list-actions">
+        <input type="checkbox"
+          ${alarm.enabled ? "checked" : ""}
+          class="alarm-toggle">
+
+        <button class="small-btn">削除</button>
+      </div>
+    `;
+
+    el.querySelector(".alarm-toggle").onchange =
+      e => {
+
+        alarm.enabled =
+          e.target.checked;
+
+        saveAlarms();
+      };
+
+    el.querySelector("button").onclick =
+      () => {
+
+        alarms =
+          alarms.filter(x => x.id !== alarm.id);
+
+        saveAlarms();
+        renderAlarms();
+      };
+
+    $("alarmList").appendChild(el);
+  });
 }
 
-function startStopwatch(){
-
-  if(stopwatchInterval)return;
-
-  stopwatchStart=
-    Date.now()-stopwatchElapsed;
-
-  stopwatchInterval=setInterval(()=>{
-
-    stopwatchElapsed=
-      Date.now()-stopwatchStart;
-
-    updateStopwatch();
-
-  },10);
-}
-
-function pauseStopwatch(){
-
-  clearInterval(stopwatchInterval);
-
-  stopwatchInterval=null;
-}
-
-function resetStopwatch(){
-
-  pauseStopwatch();
-
-  stopwatchElapsed=0;
-
-  document.getElementById("laps").innerHTML="";
-
-  updateStopwatch();
-}
-
-function lapStopwatch(){
-
-  const div=document.createElement("div");
-
-  div.className="lap";
-
-  div.innerHTML=
-    `<span>ラップ</span>`+
-    `<strong>${
-      document.getElementById("stopwatchDisplay").textContent
-    }</strong>`;
-
-  document.getElementById("laps").prepend(div);
-}
-
-
-/* =====================================================
-   ALARM
-===================================================== */
-
-let alarms=[];
-
-try{
-  alarms=JSON.parse(
-    localStorage.getItem("timebox_alarms")||"[]"
-  );
-}catch(e){
-  alarms=[];
-}
-
-function saveAlarms(){
+function saveAlarms() {
 
   localStorage.setItem(
     "timebox_alarms",
@@ -2442,331 +1826,229 @@ function saveAlarms(){
   );
 }
 
-function addAlarm(){
+$("addAlarm").onclick = () => {
 
-  const time=
-    document.getElementById("alarmTime").value;
+  const time = $("alarmTime").value;
 
-  if(!time){
-
-    alert("時刻を選んでください");
-
-    return;
-  }
+  if (!time) return;
 
   alarms.push({
-
-    id:Date.now(),
-
+    id: Date.now().toString(),
     time,
-
-    enabled:true
-
+    enabled: true
   });
 
   saveAlarms();
-
   renderAlarms();
-}
 
-function toggleAlarm(id){
+  $("alarmTime").value = "";
+};
 
-  const alarm=
-    alarms.find(x=>x.id===id);
 
-  if(alarm){
-    alarm.enabled=!alarm.enabled;
-  }
+function checkAlarms() {
 
-  saveAlarms();
+  const now = new Date();
 
-  renderAlarms();
-}
+  const current =
+    `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
 
-function deleteAlarm(id){
+  alarms.forEach(alarm => {
 
-  alarms=
-    alarms.filter(x=>x.id!==id);
-
-  saveAlarms();
-
-  renderAlarms();
-}
-
-function renderAlarms(){
-
-  const list=
-    document.getElementById("alarmList");
-
-  list.innerHTML="";
-
-  alarms
-    .sort((a,b)=>a.time.localeCompare(b.time))
-    .forEach(alarm=>{
-
-      const div=document.createElement("div");
-
-      div.className="alarm";
-
-      div.innerHTML=
-        `<div>
-          <div class="alarm-time">${alarm.time}</div>
-          <small>${alarm.enabled?"ON":"OFF"}</small>
-        </div>
-        <div>
-          <button onclick="toggleAlarm(${alarm.id})">
-            ${alarm.enabled?"OFF":"ON"}
-          </button>
-          <button onclick="deleteAlarm(${alarm.id})">
-            削除
-          </button>
-        </div>`;
-
-      list.appendChild(div);
-    });
-}
-
-let lastAlarm="";
-
-function checkAlarms(){
-
-  const now=new Date();
-
-  const current=
-    `${String(now.getHours()).padStart(2,"0")}:`+
-    `${String(now.getMinutes()).padStart(2,"0")}`;
-
-  if(current===lastAlarm)return;
-
-  lastAlarm=current;
-
-  alarms.forEach(alarm=>{
-
-    if(alarm.enabled&&alarm.time===current){
-
-      alert("⏰ アラーム："+current);
-
-      beep();
+    if (
+      alarm.enabled &&
+      alarm.time === current &&
+      now.getSeconds() === 0
+    ) {
+      alert("⏰ アラーム！");
     }
-
   });
 }
 
-setInterval(checkAlarms,1000);
+setInterval(checkAlarms, 1000);
+
+renderAlarms();
 
 
-/* =====================================================
-   WORLD CLOCK
-===================================================== */
+/* =========================================================
+   世界時計
+========================================================= */
 
-let worldClocks=[];
+const cityNames = {
+  "Asia/Tokyo": "東京",
+  "America/New_York": "ニューヨーク",
+  "Europe/London": "ロンドン",
+  "Europe/Paris": "パリ",
+  "Asia/Shanghai": "上海",
+  "Asia/Singapore": "シンガポール",
+  "Australia/Sydney": "シドニー",
+  "America/Los_Angeles": "ロサンゼルス"
+};
 
-try{
-  worldClocks=JSON.parse(
-    localStorage.getItem("timebox_world")||"[]"
-  );
-}catch(e){
-  worldClocks=[];
-}
+function renderWorld() {
 
-function addWorldClock(){
+  $("worldList").innerHTML = "";
 
-  const select=
-    document.getElementById("citySelect");
+  if (!worlds.length) {
 
-  const zone=select.value;
+    $("worldList").innerHTML =
+      `<div class="muted center">都市を追加してください</div>`;
 
-  const name=
-    select.options[select.selectedIndex].text;
-
-  if(worldClocks.some(x=>x.zone===zone)){
     return;
   }
 
-  worldClocks.push({
-    zone,
-    name
-  });
+  worlds.forEach((zone, index) => {
 
-  localStorage.setItem(
-    "timebox_world",
-    JSON.stringify(worldClocks)
-  );
+    const el = document.createElement("div");
+
+    el.className = "list-item";
+
+    const now = new Date();
+
+    const time =
+      new Intl.DateTimeFormat("ja-JP", {
+        timeZone: zone,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      }).format(now);
+
+    el.innerHTML = `
+      <div>
+        <b>${cityNames[zone] || zone}</b>
+        <div class="muted">${zone}</div>
+      </div>
+
+      <div class="list-actions">
+        <b style="font-size:22px">${time}</b>
+        <button class="small-btn">削除</button>
+      </div>
+    `;
+
+    el.querySelector("button").onclick = () => {
+
+      worlds.splice(index, 1);
+
+      localStorage.setItem(
+        "timebox_world",
+        JSON.stringify(worlds)
+      );
+
+      renderWorld();
+    };
+
+    $("worldList").appendChild(el);
+  });
+}
+
+
+$("addWorld").onclick = () => {
+
+  const zone = $("worldCity").value;
+
+  if (!worlds.includes(zone)) {
+    worlds.push(zone);
+
+    localStorage.setItem(
+      "timebox_world",
+      JSON.stringify(worlds)
+    );
+  }
 
   renderWorld();
-}
+};
 
-function removeWorldClock(zone){
+setInterval(renderWorld, 1000);
 
-  worldClocks=
-    worldClocks.filter(x=>x.zone!==zone);
+renderWorld();
+
+
+/* =========================================================
+   設定
+========================================================= */
+
+function saveSettings() {
 
   localStorage.setItem(
-    "timebox_world",
-    JSON.stringify(worldClocks)
+    "timebox_settings",
+    JSON.stringify(settings)
   );
-
-  renderWorld();
 }
 
-function renderWorld(){
+$("setting24").onchange = e => {
 
-  const list=
-    document.getElementById("worldList");
+  settings.hour24 =
+    e.target.checked;
 
-  list.innerHTML="";
+  saveSettings();
+  updateClock();
+};
 
-  worldClocks.forEach(x=>{
+$("settingSeconds").onchange = e => {
 
-    const div=document.createElement("div");
+  settings.seconds =
+    e.target.checked;
 
-    div.className="world";
+  saveSettings();
+  updateClock();
+};
 
-    const safeId=
-      x.zone.replace(/[^a-z0-9]/gi,"");
+$("setting24").checked =
+  settings.hour24;
 
-    div.innerHTML=
-      `<div>${escapeHTML(x.name)}</div>
-       <div class="world-time" id="world_${safeId}">
-         --:--:--
-       </div>
-       <button onclick="removeWorldClock('${x.zone}')">
-         ×
-       </button>`;
-
-    list.appendChild(div);
-  });
-
-  updateWorld();
-}
-
-function updateWorld(){
-
-  worldClocks.forEach(x=>{
-
-    const id=
-      "world_"+
-      x.zone.replace(/[^a-z0-9]/gi,"");
-
-    const el=document.getElementById(id);
-
-    if(!el)return;
-
-    el.textContent=
-      new Intl.DateTimeFormat(
-        "ja-JP",
-        {
-          timeZone:x.zone,
-          hour:"2-digit",
-          minute:"2-digit",
-          second:"2-digit"
-        }
-      ).format(new Date());
-  });
-}
-
-setInterval(updateWorld,1000);
+$("settingSeconds").checked =
+  settings.seconds;
 
 
-/* =====================================================
-   SOUND
-===================================================== */
+$("clearData").onclick = () => {
 
-function beep(){
-
-  try{
-
-    const ctx=new AudioContext();
-
-    const osc=ctx.createOscillator();
-
-    const gain=ctx.createGain();
-
-    osc.connect(gain);
-
-    gain.connect(ctx.destination);
-
-    osc.frequency.value=880;
-
-    gain.gain.value=.15;
-
-    osc.start();
-
-    setTimeout(()=>{
-
-      osc.stop();
-
-      ctx.close();
-
-    },500);
-
-  }catch(e){}
-}
-
-
-/* =====================================================
-   CLEAR DATA
-===================================================== */
-
-function clearAllData(){
-
-  if(!confirm(
-    "予定・アラーム・世界時計などの保存データを削除しますか？"
-  )){
+  if (!confirm("予定・アラーム・世界時計などのデータをすべて削除しますか？")) {
     return;
   }
 
   localStorage.removeItem("timebox_events");
   localStorage.removeItem("timebox_alarms");
   localStorage.removeItem("timebox_world");
+  localStorage.removeItem("timebox_settings");
 
-  events=[];
-  alarms=[];
-  worldClocks=[];
+  events = [];
+  alarms = [];
+  worlds = [];
+
+  settings = {
+    hour24: true,
+    seconds: true
+  };
+
+  $("setting24").checked = true;
+  $("settingSeconds").checked = true;
 
   renderCalendar();
   renderAlarms();
   renderWorld();
+  updateClock();
+};
+
+
+/* =========================================================
+   PWA Service Worker
+========================================================= */
+
+if ("serviceWorker" in navigator) {
+
+  window.addEventListener("load", () => {
+
+    navigator.serviceWorker.register("./sw.js")
+      .catch(error => {
+        console.log("Service Worker:", error);
+      });
+
+  });
 }
 
 
-/* =====================================================
-   MODAL CLOSE
-===================================================== */
-
-document.getElementById("eventModal")
-  .addEventListener("click",e=>{
-
-    if(e.target.id==="eventModal"){
-      closeEventModal();
-    }
-
-  });
-
-document.addEventListener("keydown",e=>{
-
-  if(e.key==="Escape"){
-    closeEventModal();
-  }
-
-});
-
-
-/* =====================================================
-   START
-===================================================== */
-
-loadSettings();
-
-updateClock();
-
-updateTimer();
-
-updateStopwatch();
-
-renderAlarms();
-
-renderWorld();
+/* =========================================================
+   初期表示
+========================================================= */
 
 renderCalendar();
 
