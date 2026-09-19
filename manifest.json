@@ -1,0 +1,20 @@
+{
+  "name": "TimeBox",
+  "short_name": "TimeBox",
+  "description": "時計・予定・タイマー・ストップウォッチ・アラーム・世界時計をまとめた時間管理アプリ",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#eef3f8",
+  "theme_color": "#1677ff",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "./gemini-svg%20(1).svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
