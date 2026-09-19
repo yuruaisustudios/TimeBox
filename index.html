@@ -2,27 +2,40 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+
 <title>TimeBox</title>
+
+<!-- TimeBox アイコン -->
+<link rel="icon" type="image/svg+xml" href="./gemini-svg%20(1).svg">
+<link rel="apple-touch-icon" href="./gemini-svg%20(1).svg">
+
+<!-- ホーム画面用 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="TimeBox">
+<meta name="theme-color" content="#1677ff">
 
 <style>
 :root{
   --accent:#1677ff;
   --accent2:#0d5bd7;
   --bg:#eef3f8;
-  --card:#fff;
-  --text:#111;
+  --card:#ffffff;
+  --text:#111111;
   --muted:#68707c;
   --line:#dfe4ea;
-  --current:#000;
-  --currentText:#fff;
+  --danger:#e53935;
+  --event:#1677ff;
+  --today-bg:#eef6ff;
 }
 
 *{
   box-sizing:border-box;
 }
 
-html,body{
+html,
+body{
   margin:0;
   min-height:100%;
   font-family:
@@ -36,26 +49,77 @@ html,body{
 body.dark{
   --bg:#0d0f12;
   --card:#181b20;
-  --text:#fff;
+  --text:#ffffff;
   --muted:#9aa2ad;
   --line:#30343b;
+  --today-bg:#17263a;
 }
 
-/* HEADER */
+button,
+input,
+select{
+  font:inherit;
+}
+
+button{
+  border:0;
+  background:var(--card);
+  color:var(--text);
+  border-radius:12px;
+  padding:10px 14px;
+  cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+  transition:.15s;
+}
+
+button:hover{
+  transform:translateY(-1px);
+}
+
+button:active{
+  transform:scale(.98);
+}
+
+.primary{
+  background:var(--accent);
+  color:#fff;
+}
+
+.danger{
+  background:var(--danger);
+  color:#fff;
+}
+
+input,
+select{
+  border:1px solid var(--line);
+  background:var(--card);
+  color:var(--text);
+  border-radius:10px;
+  padding:10px;
+  outline:none;
+}
+
+input:focus,
+select:focus{
+  border-color:var(--accent);
+}
 
 .app{
   width:100%;
-  max-width:1200px;
+  max-width:1400px;
   margin:auto;
   padding:18px;
 }
+
+/* HEADER */
 
 header{
   display:flex;
   justify-content:space-between;
   align-items:center;
   gap:12px;
-  margin-bottom:16px;
+  margin-bottom:14px;
 }
 
 .logo{
@@ -70,26 +134,6 @@ header{
 .header-buttons{
   display:flex;
   gap:8px;
-}
-
-button{
-  border:0;
-  background:var(--card);
-  color:var(--text);
-  border-radius:12px;
-  padding:11px 14px;
-  cursor:pointer;
-  font-size:14px;
-  box-shadow:0 2px 8px rgba(0,0,0,.05);
-}
-
-button:hover{
-  transform:translateY(-1px);
-}
-
-.primary{
-  background:var(--accent);
-  color:#fff;
 }
 
 /* NAV */
@@ -159,7 +203,7 @@ nav button.active{
   padding:20px;
 }
 
-/* BIG TIMER */
+/* GENERAL */
 
 .big-number{
   font-size:65px;
@@ -176,174 +220,344 @@ nav button.active{
   flex-wrap:wrap;
 }
 
-input,select{
-  border:1px solid var(--line);
-  background:var(--card);
-  color:var(--text);
-  border-radius:10px;
-  padding:11px;
-}
+/* =========================
+   CALENDAR
+========================= */
 
-/* SCHEDULE */
-
-.schedule-top{
+.calendar-toolbar{
+  background:var(--bg);
   position:sticky;
   top:0;
-  z-index:20;
-  background:var(--bg);
+  z-index:40;
   padding:5px 0 12px;
 }
 
-.week-title{
+.calendar-toolbar-top{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  gap:10px;
+  gap:12px;
 }
 
-.week-title h2{
-  margin:5px 0;
+.calendar-title{
+  font-size:24px;
+  font-weight:800;
 }
 
-.schedule-scroll{
-  height:calc(100vh - 210px);
-  min-height:500px;
-  overflow-y:auto;
-  border-radius:20px;
+.calendar-range{
+  color:var(--muted);
+  margin-top:4px;
+  font-size:14px;
+}
+
+.calendar-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+}
+
+.view-switch{
+  display:flex;
   background:var(--card);
+  border-radius:12px;
+  padding:3px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+
+.view-switch button{
+  box-shadow:none;
+  padding:8px 12px;
+  border-radius:9px;
+}
+
+.view-switch button.active{
+  background:var(--accent);
+  color:#fff;
+}
+
+/* WEEK */
+
+.calendar-container{
+  background:var(--card);
+  border-radius:20px;
+  overflow:hidden;
   box-shadow:0 2px 10px rgba(0,0,0,.06);
 }
 
-.day-block{
-  border-bottom:1px solid var(--line);
+.week-calendar{
+  display:grid;
+  grid-template-columns:65px repeat(7,minmax(120px,1fr));
+  min-width:920px;
 }
 
-.day-header{
+.calendar-scroll{
+  overflow:auto;
+  height:calc(100vh - 235px);
+  min-height:550px;
+}
+
+.week-head{
   position:sticky;
   top:0;
-  z-index:10;
-  padding:13px 15px;
+  z-index:30;
   background:var(--card);
   border-bottom:1px solid var(--line);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
 }
 
-.day-name{
-  font-weight:800;
-  font-size:17px;
+.time-head{
+  border-right:1px solid var(--line);
 }
 
-.day-date{
+.day-head{
+  text-align:center;
+  padding:10px 5px;
+  border-right:1px solid var(--line);
+}
+
+.day-head-name{
+  font-size:12px;
   color:var(--muted);
-  font-size:13px;
+  font-weight:700;
 }
 
-.timeline{
-  position:relative;
-  min-height:1440px;
-  margin-left:65px;
+.day-head-number{
+  margin:4px auto 0;
+  width:34px;
+  height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  font-size:18px;
+  font-weight:800;
 }
 
-.hour{
+.day-head.today .day-head-number{
+  background:var(--accent);
+  color:#fff;
+}
+
+.day-head.today .day-head-name{
+  color:var(--accent);
+}
+
+.time-column{
+  border-right:1px solid var(--line);
+  background:var(--card);
+}
+
+.time-label{
   height:60px;
   position:relative;
   border-bottom:1px solid var(--line);
 }
 
-.hour-label{
+.time-label span{
   position:absolute;
-  left:-65px;
-  top:-9px;
-  width:55px;
-  text-align:right;
+  right:8px;
+  top:-8px;
   color:var(--muted);
-  font-size:12px;
+  font-size:11px;
 }
 
-.hour.current-hour{
-  background:var(--current);
-  color:var(--currentText);
+.day-column{
+  position:relative;
+  height:1440px;
+  border-right:1px solid var(--line);
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 29px,
+      var(--line) 30px,
+      transparent 31px,
+      transparent 59px,
+      var(--line) 60px
+    );
 }
 
-.hour.current-hour .hour-label{
+.day-column.today{
+  background-color:var(--today-bg);
+}
+
+.hour-line{
+  position:absolute;
+  left:0;
+  right:0;
+  height:1px;
+  background:var(--line);
+}
+
+/* EVENTS */
+
+.calendar-event{
+  position:absolute;
+  left:3px;
+  right:3px;
+  border-radius:7px;
+  padding:5px 7px;
   color:#fff;
+  overflow:hidden;
+  cursor:pointer;
+  z-index:10;
+  box-shadow:0 2px 5px rgba(0,0,0,.18);
+  border-left:3px solid rgba(255,255,255,.45);
 }
+
+.calendar-event:hover{
+  filter:brightness(.96);
+  z-index:20;
+}
+
+.calendar-event-title{
+  font-size:12px;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.calendar-event-time{
+  font-size:10px;
+  opacity:.9;
+  margin-top:2px;
+}
+
+/* CURRENT LINE */
 
 .current-line{
   position:absolute;
   left:0;
   right:0;
-  height:3px;
-  background:var(--accent);
-  z-index:8;
-  box-shadow:0 0 7px rgba(0,0,0,.25);
+  height:2px;
+  background:#e53935;
+  z-index:25;
+  pointer-events:none;
 }
 
 .current-dot{
   position:absolute;
-  left:-6px;
+  left:-5px;
   top:-4px;
-  width:11px;
-  height:11px;
+  width:10px;
+  height:10px;
   border-radius:50%;
-  background:var(--accent);
+  background:#e53935;
 }
 
-/* EVENTS */
+/* MONTH */
 
-.event{
-  position:absolute;
-  left:7px;
-  right:7px;
-  border-radius:10px;
-  padding:7px 9px;
+.month-calendar{
+  display:none;
+  padding:10px;
+}
+
+.month-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  border-top:1px solid var(--line);
+  border-left:1px solid var(--line);
+}
+
+.month-weekday{
+  text-align:center;
+  padding:10px;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:800;
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+
+.month-day{
+  min-height:120px;
+  padding:7px;
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  background:var(--card);
+}
+
+.month-day.other-month{
+  opacity:.45;
+}
+
+.month-day.today{
+  background:var(--today-bg);
+}
+
+.month-number{
+  width:27px;
+  height:27px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  font-size:13px;
+  font-weight:800;
+  margin-bottom:5px;
+}
+
+.month-day.today .month-number{
   background:var(--accent);
   color:#fff;
-  overflow:hidden;
-  cursor:pointer;
-  z-index:6;
-  box-shadow:0 3px 8px rgba(0,0,0,.15);
 }
 
-.event-title{
-  font-weight:800;
-  font-size:13px;
-}
-
-.event-time{
+.month-event{
+  display:block;
+  width:100%;
+  border:0;
+  border-radius:5px;
+  padding:4px 6px;
+  margin:3px 0;
+  color:#fff;
   font-size:11px;
-  opacity:.85;
-  margin-top:2px;
+  text-align:left;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  box-shadow:none;
 }
 
-.add-day{
-  margin-left:10px;
-  padding:7px 10px;
+/* DAY */
+
+.day-calendar{
+  display:none;
+  min-width:500px;
 }
 
-/* WORLD CLOCK */
-
-.world-list{
+.day-calendar-grid{
   display:grid;
-  gap:10px;
-  margin-top:15px;
+  grid-template-columns:65px 1fr;
 }
 
-.world{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  padding:15px;
-  border-radius:13px;
-  background:var(--bg);
+.day-column-single{
+  position:relative;
+  height:1440px;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 29px,
+      var(--line) 30px,
+      transparent 31px,
+      transparent 59px,
+      var(--line) 60px
+    );
 }
 
-.world-time{
-  font-size:22px;
+.day-single-head{
+  text-align:center;
+  padding:12px;
+  border-bottom:1px solid var(--line);
   font-weight:800;
+}
+
+/* TIMER */
+
+.timer-card{
+  max-width:800px;
+  margin:auto;
 }
 
 /* ALARM */
@@ -369,6 +583,29 @@ input,select{
   font-weight:800;
 }
 
+/* WORLD */
+
+.world-list{
+  display:grid;
+  gap:10px;
+  margin-top:15px;
+}
+
+.world{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:15px;
+  border-radius:13px;
+  background:var(--bg);
+}
+
+.world-time{
+  font-size:22px;
+  font-weight:800;
+}
+
 /* LAPS */
 
 .laps{
@@ -384,7 +621,7 @@ input,select{
   border-bottom:1px solid var(--line);
 }
 
-/* THEME */
+/* SETTINGS */
 
 .theme-grid{
   display:grid;
@@ -429,10 +666,12 @@ input,select{
 
 .modal{
   width:100%;
-  max-width:430px;
+  max-width:440px;
   background:var(--card);
   border-radius:22px;
   padding:22px;
+  max-height:90vh;
+  overflow:auto;
 }
 
 .modal h2{
@@ -441,7 +680,7 @@ input,select{
 
 .form{
   display:grid;
-  gap:10px;
+  gap:9px;
 }
 
 .form label{
@@ -449,7 +688,8 @@ input,select{
   color:var(--muted);
 }
 
-.form input{
+.form input,
+.form select{
   width:100%;
 }
 
@@ -463,21 +703,73 @@ input,select{
   flex:1;
 }
 
+.color-options{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.color-option{
+  width:32px;
+  height:32px;
+  padding:0;
+  border-radius:50%;
+  border:3px solid transparent;
+  box-shadow:none;
+}
+
+.color-option.selected{
+  border-color:var(--text);
+  transform:scale(1.08);
+}
+
 /* RESPONSIVE */
 
-@media(max-width:600px){
+@media(max-width:800px){
 
   .app{
     padding:10px;
   }
 
   header{
-    margin-bottom:8px;
+    margin-bottom:7px;
   }
 
   .logo{
     font-size:21px;
   }
+
+  .calendar-toolbar-top{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .calendar-actions{
+    width:100%;
+  }
+
+  .calendar-actions button{
+    flex:1;
+  }
+
+  .view-switch{
+    width:100%;
+  }
+
+  .view-switch button{
+    flex:1;
+  }
+
+  .calendar-scroll{
+    height:calc(100vh - 290px);
+  }
+
+  .month-day{
+    min-height:90px;
+  }
+}
+
+@media(max-width:600px){
 
   .clock-card{
     padding:35px 10px;
@@ -487,18 +779,19 @@ input,select{
     font-size:50px;
   }
 
-  .schedule-scroll{
-    height:calc(100vh - 190px);
+  .month-day{
+    min-height:75px;
+    padding:4px;
   }
 
-  .timeline{
-    margin-left:52px;
+  .month-weekday{
+    padding:7px 2px;
+    font-size:10px;
   }
 
-  .hour-label{
-    left:-52px;
-    width:43px;
-    font-size:11px;
+  .month-event{
+    font-size:9px;
+    padding:3px;
   }
 }
 </style>
@@ -512,7 +805,7 @@ input,select{
   <div class="logo">⏰ <span>TimeBox</span></div>
 
   <div class="header-buttons">
-    <button onclick="toggleDark()">🌙</button>
+    <button onclick="toggleDark()" title="ダークモード">🌙</button>
     <button class="primary" onclick="openEventModal()">＋ 予定</button>
   </div>
 </header>
@@ -527,8 +820,7 @@ input,select{
   <button onclick="showPage('settings',this)">⚙️ 設定</button>
 </nav>
 
-
-<!-- ================= 時計 ================= -->
+<!-- 時計 -->
 
 <section id="clock" class="page active">
 
@@ -565,39 +857,74 @@ input,select{
 </section>
 
 
-<!-- ================= 予定 ================= -->
+<!-- 予定 -->
 
 <section id="schedule" class="page">
 
-  <div class="schedule-top">
+  <div class="calendar-toolbar">
 
-    <div class="week-title">
+    <div class="calendar-toolbar-top">
 
       <div>
-        <h2>📅 週間スケジュール</h2>
-        <div id="weekRange"></div>
+        <div class="calendar-title">📅 カレンダー</div>
+        <div class="calendar-range" id="calendarRange"></div>
       </div>
 
-      <div class="controls">
-        <button onclick="changeWeek(-1)">← 前週</button>
-        <button onclick="goCurrentWeek()">今日</button>
-        <button onclick="changeWeek(1)">次週 →</button>
+      <div class="calendar-actions">
+
+        <button onclick="goToday()">今日</button>
+
+        <button onclick="changeCalendar(-1)">←</button>
+
+        <button onclick="changeCalendar(1)">→</button>
+
+        <div class="view-switch">
+
+          <button
+            id="dayViewButton"
+            onclick="setCalendarView('day')">
+            日
+          </button>
+
+          <button
+            id="weekViewButton"
+            class="active"
+            onclick="setCalendarView('week')">
+            週
+          </button>
+
+          <button
+            id="monthViewButton"
+            onclick="setCalendarView('month')">
+            月
+          </button>
+
+        </div>
+
       </div>
 
     </div>
 
   </div>
 
-  <div class="schedule-scroll" id="scheduleScroll"></div>
+  <div class="calendar-container">
+
+    <div id="weekCalendar" class="calendar-scroll"></div>
+
+    <div id="dayCalendar" class="calendar-scroll"></div>
+
+    <div id="monthCalendar" class="month-calendar"></div>
+
+  </div>
 
 </section>
 
 
-<!-- ================= タイマー ================= -->
+<!-- タイマー -->
 
 <section id="timer" class="page">
 
-  <div class="card">
+  <div class="card timer-card">
 
     <h2>⏳ タイマー</h2>
 
@@ -617,24 +944,11 @@ input,select{
 
     <div class="controls">
 
-      <input
-        id="timerMin"
-        type="number"
-        min="0"
-        placeholder="分"
-      >
+      <input id="timerMin" type="number" min="0" placeholder="分">
 
-      <input
-        id="timerSec"
-        type="number"
-        min="0"
-        max="59"
-        placeholder="秒"
-      >
+      <input id="timerSec" type="number" min="0" max="59" placeholder="秒">
 
-      <button onclick="customTimer()">
-        設定
-      </button>
+      <button onclick="customTimer()">設定</button>
 
     </div>
 
@@ -651,7 +965,7 @@ input,select{
 </section>
 
 
-<!-- ================= ストップウォッチ ================= -->
+<!-- ストップウォッチ -->
 
 <section id="stopwatch" class="page">
 
@@ -677,7 +991,7 @@ input,select{
 </section>
 
 
-<!-- ================= アラーム ================= -->
+<!-- アラーム -->
 
 <section id="alarm" class="page">
 
@@ -689,9 +1003,7 @@ input,select{
 
       <input id="alarmTime" type="time">
 
-      <button class="primary" onclick="addAlarm()">
-        ＋ 追加
-      </button>
+      <button class="primary" onclick="addAlarm()">＋ 追加</button>
 
     </div>
 
@@ -702,7 +1014,7 @@ input,select{
 </section>
 
 
-<!-- ================= 世界時計 ================= -->
+<!-- 世界時計 -->
 
 <section id="world" class="page">
 
@@ -714,39 +1026,17 @@ input,select{
 
       <select id="citySelect">
 
-        <option value="Asia/Tokyo">
-          東京 🇯🇵
-        </option>
-
-        <option value="America/New_York">
-          ニューヨーク 🇺🇸
-        </option>
-
-        <option value="Europe/London">
-          ロンドン 🇬🇧
-        </option>
-
-        <option value="Europe/Paris">
-          パリ 🇫🇷
-        </option>
-
-        <option value="Asia/Singapore">
-          シンガポール 🇸🇬
-        </option>
-
-        <option value="Australia/Sydney">
-          シドニー 🇦🇺
-        </option>
-
-        <option value="America/Los_Angeles">
-          ロサンゼルス 🇺🇸
-        </option>
+        <option value="Asia/Tokyo">東京 🇯🇵</option>
+        <option value="America/New_York">ニューヨーク 🇺🇸</option>
+        <option value="Europe/London">ロンドン 🇬🇧</option>
+        <option value="Europe/Paris">パリ 🇫🇷</option>
+        <option value="Asia/Singapore">シンガポール 🇸🇬</option>
+        <option value="Australia/Sydney">シドニー 🇦🇺</option>
+        <option value="America/Los_Angeles">ロサンゼルス 🇺🇸</option>
 
       </select>
 
-      <button class="primary" onclick="addWorldClock()">
-        ＋ 追加
-      </button>
+      <button class="primary" onclick="addWorldClock()">＋ 追加</button>
 
     </div>
 
@@ -757,7 +1047,7 @@ input,select{
 </section>
 
 
-<!-- ================= 設定 ================= -->
+<!-- 設定 -->
 
 <section id="settings" class="page">
 
@@ -769,33 +1059,13 @@ input,select{
 
     <div class="theme-grid">
 
-      <div class="theme blue" onclick="setTheme('#1677ff','#0d5bd7')">
-        BLUE
-      </div>
-
-      <div class="theme purple" onclick="setTheme('#7b4dff','#5e31d7')">
-        PURPLE
-      </div>
-
-      <div class="theme green" onclick="setTheme('#16a36a','#08794c')">
-        GREEN
-      </div>
-
-      <div class="theme orange" onclick="setTheme('#f27b22','#d45c08')">
-        ORANGE
-      </div>
-
-      <div class="theme red" onclick="setTheme('#e53935','#bd211e')">
-        RED
-      </div>
-
-      <div class="theme pink" onclick="setTheme('#e84d9b','#c52b78')">
-        PINK
-      </div>
-
-      <div class="theme cyan" onclick="setTheme('#00a8c6','#00839b')">
-        CYAN
-      </div>
+      <div class="theme blue" onclick="setTheme('#1677ff','#0d5bd7')">BLUE</div>
+      <div class="theme purple" onclick="setTheme('#7b4dff','#5e31d7')">PURPLE</div>
+      <div class="theme green" onclick="setTheme('#16a36a','#08794c')">GREEN</div>
+      <div class="theme orange" onclick="setTheme('#f27b22','#d45c08')">ORANGE</div>
+      <div class="theme red" onclick="setTheme('#e53935','#bd211e')">RED</div>
+      <div class="theme pink" onclick="setTheme('#e84d9b','#c52b78')">PINK</div>
+      <div class="theme cyan" onclick="setTheme('#00a8c6','#00839b')">CYAN</div>
 
     </div>
 
@@ -804,24 +1074,14 @@ input,select{
     <h3>🕐 時計</h3>
 
     <label>
-      <input
-        type="checkbox"
-        id="format24"
-        checked
-        onchange="saveSettings()"
-      >
+      <input type="checkbox" id="format24" checked onchange="saveSettings()">
       24時間表示
     </label>
 
     <br><br>
 
     <label>
-      <input
-        type="checkbox"
-        id="showSeconds"
-        checked
-        onchange="saveSettings()"
-      >
+      <input type="checkbox" id="showSeconds" checked onchange="saveSettings()">
       秒を表示
     </label>
 
@@ -838,15 +1098,13 @@ input,select{
 </div>
 
 
-<!-- ================= 予定追加モーダル ================= -->
+<!-- 予定モーダル -->
 
 <div class="modal-bg" id="eventModal">
 
   <div class="modal">
 
-    <h2 id="modalTitle">
-      ＋ 予定を追加
-    </h2>
+    <h2 id="modalTitle">＋ 予定を追加</h2>
 
     <div class="form">
 
@@ -855,52 +1113,69 @@ input,select{
       <input
         id="eventName"
         type="text"
-        placeholder="例：学校、ゲーム、宿題"
-      >
+        placeholder="例：学校、映画、宿題">
 
       <label>日付</label>
 
-      <input
-        id="eventDate"
-        type="date"
-      >
+      <input id="eventDate" type="date">
 
       <label>開始時刻</label>
 
-      <input
-        id="eventStart"
-        type="time"
-      >
+      <input id="eventStart" type="time">
 
       <label>終了時刻</label>
 
-      <input
-        id="eventEnd"
-        type="time"
-      >
+      <input id="eventEnd" type="time">
+
+      <label>予定の色</label>
+
+      <div class="color-options">
+
+        <button class="color-option" data-color="#1677ff"
+          style="background:#1677ff"
+          onclick="selectEventColor('#1677ff')"></button>
+
+        <button class="color-option" data-color="#7b4dff"
+          style="background:#7b4dff"
+          onclick="selectEventColor('#7b4dff')"></button>
+
+        <button class="color-option" data-color="#16a36a"
+          style="background:#16a36a"
+          onclick="selectEventColor('#16a36a')"></button>
+
+        <button class="color-option" data-color="#f27b22"
+          style="background:#f27b22"
+          onclick="selectEventColor('#f27b22')"></button>
+
+        <button class="color-option" data-color="#e53935"
+          style="background:#e53935"
+          onclick="selectEventColor('#e53935')"></button>
+
+        <button class="color-option" data-color="#e84d9b"
+          style="background:#e84d9b"
+          onclick="selectEventColor('#e84d9b')"></button>
+
+        <button class="color-option" data-color="#00a8c6"
+          style="background:#00a8c6"
+          onclick="selectEventColor('#00a8c6')"></button>
+
+      </div>
 
     </div>
 
     <div class="modal-buttons">
 
-      <button onclick="closeEventModal()">
-        キャンセル
-      </button>
+      <button onclick="closeEventModal()">キャンセル</button>
 
       <button
         id="deleteEventButton"
+        class="danger"
         onclick="deleteEditingEvent()"
-        style="display:none"
-      >
+        style="display:none">
         🗑️ 削除
       </button>
 
-      <button
-        class="primary"
-        onclick="saveEvent()"
-      >
-        保存
-      </button>
+      <button class="primary" onclick="saveEvent()">保存</button>
 
     </div>
 
@@ -912,10 +1187,10 @@ input,select{
 <script>
 
 /* =====================================================
-   設定
+   SETTINGS
 ===================================================== */
 
-let settings = {
+let settings={
   format24:true,
   showSeconds:true,
   accent:"#1677ff",
@@ -924,14 +1199,17 @@ let settings = {
 
 function loadSettings(){
 
-  const saved =
-    localStorage.getItem("timebox_settings");
+  const saved=localStorage.getItem("timebox_settings");
 
   if(saved){
-    settings={
-      ...settings,
-      ...JSON.parse(saved)
-    };
+
+    try{
+      settings={
+        ...settings,
+        ...JSON.parse(saved)
+      };
+    }catch(e){}
+
   }
 
   document.documentElement.style.setProperty(
@@ -944,11 +1222,8 @@ function loadSettings(){
     settings.accent2
   );
 
-  document.getElementById("format24").checked =
-    settings.format24;
-
-  document.getElementById("showSeconds").checked =
-    settings.showSeconds;
+  document.getElementById("format24").checked=settings.format24;
+  document.getElementById("showSeconds").checked=settings.showSeconds;
 
   if(localStorage.getItem("timebox_dark")==="true"){
     document.body.classList.add("dark");
@@ -957,10 +1232,10 @@ function loadSettings(){
 
 function saveSettings(){
 
-  settings.format24 =
+  settings.format24=
     document.getElementById("format24").checked;
 
-  settings.showSeconds =
+  settings.showSeconds=
     document.getElementById("showSeconds").checked;
 
   localStorage.setItem(
@@ -974,15 +1249,8 @@ function setTheme(accent,accent2){
   settings.accent=accent;
   settings.accent2=accent2;
 
-  document.documentElement.style.setProperty(
-    "--accent",
-    accent
-  );
-
-  document.documentElement.style.setProperty(
-    "--accent2",
-    accent2
-  );
+  document.documentElement.style.setProperty("--accent",accent);
+  document.documentElement.style.setProperty("--accent2",accent2);
 
   saveSettings();
 }
@@ -999,33 +1267,30 @@ function toggleDark(){
 
 
 /* =====================================================
-   ページ
+   PAGE
 ===================================================== */
 
 function showPage(id,btn){
 
-  document
-    .querySelectorAll(".page")
+  document.querySelectorAll(".page")
     .forEach(x=>x.classList.remove("active"));
 
-  document
-    .getElementById(id)
+  document.getElementById(id)
     .classList.add("active");
 
-  document
-    .querySelectorAll("nav button")
+  document.querySelectorAll("nav button")
     .forEach(x=>x.classList.remove("active"));
 
   btn.classList.add("active");
 
   if(id==="schedule"){
-    renderSchedule();
+    renderCalendar();
   }
 }
 
 
 /* =====================================================
-   時計
+   CLOCK
 ===================================================== */
 
 function updateClock(){
@@ -1038,59 +1303,47 @@ function updateClock(){
     hour=hour%12 || 12;
   }
 
-  const hh=
-    String(hour).padStart(2,"0");
+  const hh=String(hour).padStart(2,"0");
+  const mm=String(now.getMinutes()).padStart(2,"0");
+  const ss=String(now.getSeconds()).padStart(2,"0");
 
-  const mm=
-    String(now.getMinutes()).padStart(2,"0");
-
-  const ss=
-    String(now.getSeconds()).padStart(2,"0");
-
-  document.getElementById("mainTime")
-    .textContent=
-      settings.showSeconds
-      ? `${hh}:${mm}:${ss}`
-      : `${hh}:${mm}`;
+  document.getElementById("mainTime").textContent=
+    settings.showSeconds
+    ? `${hh}:${mm}:${ss}`
+    : `${hh}:${mm}`;
 
   const days=[
     "日","月","火","水","木","金","土"
   ];
 
-  document.getElementById("mainDate")
-    .textContent=
-      `${now.getFullYear()}年`+
-      `${now.getMonth()+1}月`+
-      `${now.getDate()}日 `+
-      `(${days[now.getDay()]})`;
+  document.getElementById("mainDate").textContent=
+    `${now.getFullYear()}年`+
+    `${now.getMonth()+1}月`+
+    `${now.getDate()}日`+
+    ` (${days[now.getDay()]})`;
 
   const midnight=new Date(now);
-
   midnight.setHours(24,0,0,0);
 
-  const remain=
-    Math.max(0,midnight-now)/1000;
+  const remain=Math.max(0,midnight-now)/1000;
 
-  document.getElementById("remaining")
-    .textContent=
-      `今日の残り時間：${formatHMS(remain)}`;
+  document.getElementById("remaining").textContent=
+    `今日の残り時間：${formatHMS(remain)}`;
 
   const start=new Date(now);
-
   start.setHours(0,0,0,0);
 
-  const progress=
-    ((now-start)/(midnight-start))*100;
+  const progress=((now-start)/(midnight-start))*100;
 
-  document.getElementById("dayProgress")
-    .textContent=
-      progress.toFixed(1)+"%";
+  document.getElementById("dayProgress").textContent=
+    progress.toFixed(1)+"%";
 
-  document.getElementById("todayInfo")
-    .textContent=
-      `現在 ${now.toLocaleTimeString("ja-JP")}`;
+  document.getElementById("todayInfo").textContent=
+    `現在 ${now.toLocaleTimeString("ja-JP")}`;
 
-  updateCurrentSchedule();
+  if(document.getElementById("schedule").classList.contains("active")){
+    updateCurrentCalendarLine();
+  }
 }
 
 function formatHMS(sec){
@@ -1098,9 +1351,7 @@ function formatHMS(sec){
   sec=Math.max(0,Math.floor(sec));
 
   const h=Math.floor(sec/3600);
-
   const m=Math.floor((sec%3600)/60);
-
   const s=sec%60;
 
   return `${String(h).padStart(2,"0")}:`+
@@ -1112,392 +1363,729 @@ setInterval(updateClock,250);
 
 
 /* =====================================================
-   週間スケジュール
+   CALENDAR DATA
 ===================================================== */
 
-let weekOffset=0;
+let calendarOffset=0;
+let calendarView="week";
 
-let events=
-  JSON.parse(
+let events=[];
+
+try{
+  events=JSON.parse(
     localStorage.getItem("timebox_events")||"[]"
   );
+}catch(e){
+  events=[];
+}
 
 let editingEventId=null;
+let selectedEventColor="#1677ff";
 
-
-/* 今週の月曜日 */
-
-function getMonday(offset=0){
-
-  const now=new Date();
-
-  now.setHours(0,0,0,0);
-
-  const day=now.getDay();
-
-  const diff=
-    day===0 ? -6 : 1-day;
-
-  now.setDate(
-    now.getDate()+diff+(offset*7)
-  );
-
-  return now;
-}
 
 function dateKey(date){
 
   const y=date.getFullYear();
 
-  const m=String(
-    date.getMonth()+1
-  ).padStart(2,"0");
+  const m=String(date.getMonth()+1).padStart(2,"0");
 
-  const d=String(
-    date.getDate()
-  ).padStart(2,"0");
+  const d=String(date.getDate()).padStart(2,"0");
 
   return `${y}-${m}-${d}`;
 }
 
-function changeWeek(amount){
+function parseDate(key){
 
-  weekOffset+=amount;
+  const [y,m,d]=key.split("-").map(Number);
 
-  renderSchedule();
+  return new Date(y,m-1,d);
 }
 
-function goCurrentWeek(){
+function getMonday(offset=0){
 
-  weekOffset=0;
+  const date=new Date();
 
-  renderSchedule();
-}
+  date.setHours(0,0,0,0);
 
-function renderSchedule(){
+  const day=date.getDay();
 
-  const container=
-    document.getElementById("scheduleScroll");
+  const diff=day===0?-6:1-day;
 
-  container.innerHTML="";
-
-  const monday=
-    getMonday(weekOffset);
-
-  const sunday=
-    new Date(monday);
-
-  sunday.setDate(
-    monday.getDate()+6
+  date.setDate(
+    date.getDate()+diff+(offset*7)
   );
 
-  document.getElementById("weekRange")
-    .textContent=
-      `${monday.getMonth()+1}/${monday.getDate()}`+
-      ` ～ `+
-      `${sunday.getMonth()+1}/${sunday.getDate()}`;
+  return date;
+}
 
-  const names=[
-    "月曜日",
-    "火曜日",
-    "水曜日",
-    "木曜日",
-    "金曜日",
-    "土曜日",
-    "日曜日"
-  ];
+function changeCalendar(amount){
 
-  for(let d=0;d<7;d++){
-
-    const date=new Date(monday);
-
-    date.setDate(
-      monday.getDate()+d
-    );
-
-    const block=
-      document.createElement("div");
-
-    block.className="day-block";
-
-    const header=
-      document.createElement("div");
-
-    header.className="day-header";
-
-    const info=
-      document.createElement("div");
-
-    info.innerHTML=
-      `<div class="day-name">
-        ${names[d]}
-      </div>
-      <div class="day-date">
-        ${date.getFullYear()}/
-        ${date.getMonth()+1}/
-        ${date.getDate()}
-      </div>`;
-
-    const add=
-      document.createElement("button");
-
-    add.className="add-day";
-
-    add.textContent="＋";
-
-    add.onclick=()=>{
-      openEventModal(dateKey(date));
-    };
-
-    header.appendChild(info);
-    header.appendChild(add);
-
-    block.appendChild(header);
-
-
-    const timeline=
-      document.createElement("div");
-
-    timeline.className="timeline";
-
-    for(let hour=0;hour<24;hour++){
-
-      const slot=
-        document.createElement("div");
-
-      slot.className="hour";
-
-      slot.dataset.hour=hour;
-
-      const label=
-        document.createElement("div");
-
-      label.className="hour-label";
-
-      label.textContent=
-        `${String(hour).padStart(2,"0")}:00`;
-
-      slot.appendChild(label);
-
-      timeline.appendChild(slot);
-    }
-
-
-    /* 現在時間の黒背景 */
-
-    const now=new Date();
-
-    if(
-      dateKey(date)===dateKey(now)
-    ){
-
-      const currentHour=
-        timeline.querySelector(
-          `.hour[data-hour="${now.getHours()}"]`
-        );
-
-      if(currentHour){
-        currentHour.classList.add(
-          "current-hour"
-        );
-      }
-
-      const minutes=
-        now.getHours()*60+
-        now.getMinutes()+
-        now.getSeconds()/60;
-
-      const line=
-        document.createElement("div");
-
-      line.className="current-line";
-
-      line.style.top=
-        `${minutes}px`;
-
-      const dot=
-        document.createElement("div");
-
-      dot.className="current-dot";
-
-      line.appendChild(dot);
-
-      timeline.appendChild(line);
-    }
-
-
-    /* 予定 */
-
-    const key=dateKey(date);
-
-    events
-      .filter(e=>e.date===key)
-      .forEach(e=>{
-
-        const start=
-          timeToMinutes(e.start);
-
-        const end=
-          timeToMinutes(e.end);
-
-        let duration=
-          end-start;
-
-        if(duration<=0){
-          duration=60;
-        }
-
-        const event=
-          document.createElement("div");
-
-        event.className="event";
-
-        event.style.top=
-          `${start}px`;
-
-        event.style.height=
-          `${Math.max(30,duration)}px`;
-
-        event.innerHTML=
-          `<div class="event-title">
-            ${escapeHTML(e.name)}
-          </div>
-          <div class="event-time">
-            ${e.start} ～ ${e.end}
-          </div>`;
-
-        event.onclick=()=>{
-          openEventModal(null,e.id);
-        };
-
-        timeline.appendChild(event);
-      });
-
-
-    block.appendChild(timeline);
-
-    container.appendChild(block);
+  if(calendarView==="week"){
+    calendarOffset+=amount;
   }
 
-  updateCurrentSchedule();
+  if(calendarView==="day"){
+    calendarOffset+=amount;
+  }
+
+  if(calendarView==="month"){
+    calendarOffset+=amount;
+  }
+
+  renderCalendar();
 }
 
-function updateCurrentSchedule(){
+function goToday(){
 
-  const now=new Date();
-
-  document
-    .querySelectorAll(".current-hour")
-    .forEach(x=>x.classList.remove("current-hour"));
-
-  document
-    .querySelectorAll(".current-line")
-    .forEach(x=>x.remove());
-
-  const today=
-    dateKey(now);
-
-  document
-    .querySelectorAll(".day-block")
-    .forEach(block=>{
-
-      const dateText=
-        block
-          .querySelector(".day-date")
-          ?.textContent
-          .trim();
-
-      if(!dateText)return;
-
-      const current=
-        dateText===
-        `${now.getFullYear()}/`+
-        `${now.getMonth()+1}/`+
-        `${now.getDate()}`;
-
-      if(!current)return;
-
-      const timeline=
-        block.querySelector(".timeline");
-
-      if(!timeline)return;
-
-      const hour=
-        timeline.querySelector(
-          `.hour[data-hour="${now.getHours()}"]`
-        );
-
-      if(hour){
-        hour.classList.add("current-hour");
-      }
-
-      const minutes=
-        now.getHours()*60+
-        now.getMinutes()+
-        now.getSeconds()/60;
-
-      const line=
-        document.createElement("div");
-
-      line.className="current-line";
-
-      line.style.top=
-        `${minutes}px`;
-
-      const dot=
-        document.createElement("div");
-
-      dot.className="current-dot";
-
-      line.appendChild(dot);
-
-      timeline.appendChild(line);
-    });
+  calendarOffset=0;
+  renderCalendar();
 }
 
-function timeToMinutes(time){
+function setCalendarView(view){
 
-  const [h,m]=time.split(":").map(Number);
+  calendarView=view;
 
-  return h*60+m;
+  document.getElementById("dayViewButton")
+    .classList.toggle("active",view==="day");
+
+  document.getElementById("weekViewButton")
+    .classList.toggle("active",view==="week");
+
+  document.getElementById("monthViewButton")
+    .classList.toggle("active",view==="month");
+
+  renderCalendar();
+}
+
+function renderCalendar(){
+
+  document.getElementById("weekCalendar").style.display=
+    calendarView==="week" ? "block" : "none";
+
+  document.getElementById("dayCalendar").style.display=
+    calendarView==="day" ? "block" : "none";
+
+  document.getElementById("monthCalendar").style.display=
+    calendarView==="month" ? "block" : "none";
+
+  if(calendarView==="week"){
+    renderWeek();
+  }
+
+  if(calendarView==="day"){
+    renderDay();
+  }
+
+  if(calendarView==="month"){
+    renderMonth();
+  }
 }
 
 
 /* =====================================================
-   予定モーダル
+   WEEK
 ===================================================== */
 
-function openEventModal(date=null,id=null){
+function renderWeek(){
+
+  const container=document.getElementById("weekCalendar");
+
+  container.innerHTML="";
+
+  const monday=getMonday(calendarOffset);
+
+  const sunday=new Date(monday);
+  sunday.setDate(sunday.getDate()+6);
+
+  document.getElementById("calendarRange").textContent=
+    `${monday.getFullYear()}/${monday.getMonth()+1}/${monday.getDate()}`+
+    ` ～ `+
+    `${sunday.getFullYear()}/${sunday.getMonth()+1}/${sunday.getDate()}`;
+
+  const wrapper=document.createElement("div");
+  wrapper.className="week-calendar";
+
+  const headEmpty=document.createElement("div");
+  headEmpty.className="time-head week-head";
+  wrapper.appendChild(headEmpty);
+
+  const names=[
+    "月","火","水","木","金","土","日"
+  ];
+
+  for(let i=0;i<7;i++){
+
+    const date=new Date(monday);
+    date.setDate(date.getDate()+i);
+
+    const head=document.createElement("div");
+
+    head.className="day-head week-head";
+
+    if(dateKey(date)===dateKey(new Date())){
+      head.classList.add("today");
+    }
+
+    head.innerHTML=
+      `<div class="day-head-name">${names[i]}</div>`+
+      `<div class="day-head-number">${date.getDate()}</div>`;
+
+    head.onclick=()=>{
+      openEventModal(dateKey(date));
+    };
+
+    wrapper.appendChild(head);
+  }
+
+
+  /* 時間列 */
+
+  const timeColumn=document.createElement("div");
+  timeColumn.className="time-column";
+
+  for(let h=0;h<24;h++){
+
+    const label=document.createElement("div");
+    label.className="time-label";
+
+    label.innerHTML=
+      `<span>${String(h).padStart(2,"0")}:00</span>`;
+
+    timeColumn.appendChild(label);
+  }
+
+  wrapper.appendChild(timeColumn);
+
+
+  /* 7日 */
+
+  for(let i=0;i<7;i++){
+
+    const date=new Date(monday);
+    date.setDate(date.getDate()+i);
+
+    const column=document.createElement("div");
+    column.className="day-column";
+
+    if(dateKey(date)===dateKey(new Date())){
+      column.classList.add("today");
+    }
+
+    for(let h=1;h<24;h++){
+
+      const line=document.createElement("div");
+      line.className="hour-line";
+      line.style.top=`${h*60}px`;
+
+      column.appendChild(line);
+    }
+
+    const dayEvents=events
+      .filter(e=>e.date===dateKey(date))
+      .sort((a,b)=>timeToMinutes(a.start)-timeToMinutes(b.start));
+
+    renderEventsInColumn(column,dayEvents);
+
+    if(dateKey(date)===dateKey(new Date())){
+      addCurrentLine(column);
+    }
+
+    column.addEventListener("dblclick",e=>{
+
+      if(e.target!==column)return;
+
+      const rect=column.getBoundingClientRect();
+
+      const y=e.clientY-rect.top;
+
+      let minutes=Math.floor(y);
+
+      minutes=Math.floor(minutes/15)*15;
+
+      if(minutes>=1440)minutes=1430;
+
+      const h=Math.floor(minutes/60);
+      const m=minutes%60;
+
+      const start=
+        `${String(h).padStart(2,"0")}:`+
+        `${String(m).padStart(2,"0")}`;
+
+      const endMinutes=Math.min(minutes+60,1439);
+
+      const eh=Math.floor(endMinutes/60);
+      const em=endMinutes%60;
+
+      openEventModal(
+        dateKey(date),
+        null,
+        start,
+        `${String(eh).padStart(2,"0")}:${String(em).padStart(2,"0")}`
+      );
+    });
+
+    wrapper.appendChild(column);
+  }
+
+  container.appendChild(wrapper);
+
+  setTimeout(()=>{
+    scrollCalendarToNow();
+  },50);
+}
+
+
+/* =====================================================
+   DAY
+===================================================== */
+
+function renderDay(){
+
+  const container=document.getElementById("dayCalendar");
+
+  container.innerHTML="";
+
+  const base=new Date();
+  base.setHours(0,0,0,0);
+
+  base.setDate(
+    base.getDate()+calendarOffset
+  );
+
+  document.getElementById("calendarRange").textContent=
+    `${base.getFullYear()}年`+
+    `${base.getMonth()+1}月`+
+    `${base.getDate()}日`;
+
+  const grid=document.createElement("div");
+  grid.className="day-calendar-grid";
+
+  const times=document.createElement("div");
+  times.className="time-column";
+
+  for(let h=0;h<24;h++){
+
+    const label=document.createElement("div");
+    label.className="time-label";
+
+    label.innerHTML=
+      `<span>${String(h).padStart(2,"0")}:00</span>`;
+
+    times.appendChild(label);
+  }
+
+  grid.appendChild(times);
+
+  const right=document.createElement("div");
+
+  const head=document.createElement("div");
+  head.className="day-single-head";
+
+  const names=[
+    "日","月","火","水","木","金","土"
+  ];
+
+  head.textContent=
+    `${names[base.getDay()]}曜日 ${base.getMonth()+1}/${base.getDate()}`;
+
+  right.appendChild(head);
+
+  const column=document.createElement("div");
+  column.className="day-column-single";
+
+  for(let h=1;h<24;h++){
+
+    const line=document.createElement("div");
+    line.className="hour-line";
+    line.style.top=`${h*60}px`;
+
+    column.appendChild(line);
+  }
+
+  const dayEvents=events
+    .filter(e=>e.date===dateKey(base))
+    .sort((a,b)=>timeToMinutes(a.start)-timeToMinutes(b.start));
+
+  renderEventsInColumn(column,dayEvents);
+
+  if(dateKey(base)===dateKey(new Date())){
+    addCurrentLine(column);
+  }
+
+  column.addEventListener("dblclick",e=>{
+
+    if(e.target!==column)return;
+
+    const rect=column.getBoundingClientRect();
+
+    let minutes=Math.floor(e.clientY-rect.top);
+
+    minutes=Math.floor(minutes/15)*15;
+
+    if(minutes>=1440)minutes=1430;
+
+    const h=Math.floor(minutes/60);
+    const m=minutes%60;
+
+    openEventModal(
+      dateKey(base),
+      null,
+      `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`,
+      `${String(Math.floor((minutes+60)/60)).padStart(2,"0")}:${String((minutes+60)%60).padStart(2,"0")}`
+    );
+  });
+
+  right.appendChild(column);
+
+  grid.appendChild(right);
+
+  container.appendChild(grid);
+
+  setTimeout(scrollCalendarToNow,50);
+}
+
+
+/* =====================================================
+   MONTH
+===================================================== */
+
+function renderMonth(){
+
+  const container=document.getElementById("monthCalendar");
+
+  container.innerHTML="";
+
+  const now=new Date();
+
+  const first=new Date(
+    now.getFullYear(),
+    now.getMonth()+calendarOffset,
+    1
+  );
+
+  const year=first.getFullYear();
+  const month=first.getMonth();
+
+  const last=new Date(year,month+1,0);
+
+  document.getElementById("calendarRange").textContent=
+    `${year}年${month+1}月`;
+
+  const grid=document.createElement("div");
+  grid.className="month-grid";
+
+  const names=[
+    "月","火","水","木","金","土","日"
+  ];
+
+  names.forEach(name=>{
+
+    const el=document.createElement("div");
+    el.className="month-weekday";
+    el.textContent=name;
+
+    grid.appendChild(el);
+  });
+
+  let firstDay=first.getDay();
+
+  firstDay=firstDay===0?6:firstDay-1;
+
+  const totalCells=
+    Math.ceil((firstDay+last.getDate())/7)*7;
+
+  for(let i=0;i<totalCells;i++){
+
+    const dayNumber=
+      i-firstDay+1;
+
+    const date=new Date(year,month,dayNumber);
+
+    const cell=document.createElement("div");
+    cell.className="month-day";
+
+    if(date.getMonth()!==month){
+      cell.classList.add("other-month");
+    }
+
+    if(dateKey(date)===dateKey(new Date())){
+      cell.classList.add("today");
+    }
+
+    const number=document.createElement("div");
+    number.className="month-number";
+    number.textContent=date.getDate();
+
+    cell.appendChild(number);
+
+    cell.onclick=()=>{
+      openEventModal(dateKey(date));
+    };
+
+    const dayEvents=events
+      .filter(e=>e.date===dateKey(date))
+      .sort((a,b)=>timeToMinutes(a.start)-timeToMinutes(b.start));
+
+    dayEvents.slice(0,5).forEach(e=>{
+
+      const event=document.createElement("button");
+      event.className="month-event";
+      event.style.background=e.color||settings.accent;
+
+      event.textContent=
+        `${e.start} ${e.name}`;
+
+      event.onclick=(ev)=>{
+        ev.stopPropagation();
+        openEventModal(null,e.id);
+      };
+
+      cell.appendChild(event);
+    });
+
+    if(dayEvents.length>5){
+
+      const more=document.createElement("div");
+
+      more.style.fontSize="10px";
+      more.style.color="var(--muted)";
+      more.textContent=
+        `＋${dayEvents.length-5}件`;
+
+      cell.appendChild(more);
+    }
+
+    grid.appendChild(cell);
+  }
+
+  container.appendChild(grid);
+}
+
+
+/* =====================================================
+   EVENTS
+===================================================== */
+
+function renderEventsInColumn(column,dayEvents){
+
+  const groups=[];
+
+  dayEvents.forEach(event=>{
+
+    const start=timeToMinutes(event.start);
+    const end=Math.max(
+      start+30,
+      timeToMinutes(event.end)
+    );
+
+    let placed=false;
+
+    for(const group of groups){
+
+      const overlaps=group.some(other=>{
+
+        const otherStart=timeToMinutes(other.start);
+        const otherEnd=Math.max(
+          otherStart+30,
+          timeToMinutes(other.end)
+        );
+
+        return start<otherEnd && end>otherStart;
+      });
+
+      if(!overlaps){
+
+        group.push(event);
+        placed=true;
+        break;
+      }
+    }
+
+    if(!placed){
+      groups.push([event]);
+    }
+  });
+
+
+  dayEvents.forEach(event=>{
+
+    let groupIndex=0;
+    let group=null;
+
+    for(let i=0;i<groups.length;i++){
+
+      if(groups[i].includes(event)){
+        groupIndex=i;
+        group=groups[i];
+        break;
+      }
+    }
+
+    const start=timeToMinutes(event.start);
+
+    let end=timeToMinutes(event.end);
+
+    if(end<=start){
+      end=start+60;
+    }
+
+    const div=document.createElement("div");
+
+    div.className="calendar-event";
+
+    div.style.top=`${start}px`;
+
+    div.style.height=
+      `${Math.max(30,end-start)}px`;
+
+    const count=group ? group.length : 1;
+
+    const index=group ? group.indexOf(event) : 0;
+
+    div.style.width=
+      `calc(${100/count}% - 5px)`;
+
+    div.style.left=
+      `calc(${index*100/count}% + 3px)`;
+
+    div.style.right="auto";
+
+    div.style.background=
+      event.color || settings.accent;
+
+    div.innerHTML=
+      `<div class="calendar-event-title">
+        ${escapeHTML(event.name)}
+      </div>
+      <div class="calendar-event-time">
+        ${event.start}～${event.end}
+      </div>`;
+
+    div.onclick=()=>{
+      openEventModal(null,event.id);
+    };
+
+    column.appendChild(div);
+  });
+}
+
+
+/* =====================================================
+   CURRENT LINE
+===================================================== */
+
+function addCurrentLine(column){
+
+  const now=new Date();
+
+  const minutes=
+    now.getHours()*60+
+    now.getMinutes()+
+    now.getSeconds()/60;
+
+  const line=document.createElement("div");
+
+  line.className="current-line";
+
+  line.style.top=`${minutes}px`;
+
+  const dot=document.createElement("div");
+
+  dot.className="current-dot";
+
+  line.appendChild(dot);
+
+  column.appendChild(line);
+}
+
+function updateCurrentCalendarLine(){
+
+  if(!document.getElementById("schedule").classList.contains("active")){
+    return;
+  }
+
+  const old=document.querySelectorAll(".current-line");
+
+  old.forEach(x=>x.remove());
+
+  if(calendarView==="week"){
+
+    document.querySelectorAll(".day-column.today")
+      .forEach(column=>{
+        addCurrentLine(column);
+      });
+  }
+
+  if(calendarView==="day"){
+
+    const date=new Date();
+
+    date.setHours(0,0,0,0);
+    date.setDate(date.getDate()+calendarOffset);
+
+    if(dateKey(date)===dateKey(new Date())){
+
+      const column=
+        document.querySelector(".day-column-single");
+
+      if(column){
+        addCurrentLine(column);
+      }
+    }
+  }
+}
+
+function scrollCalendarToNow(){
+
+  if(calendarView==="month")return;
+
+  const scroll=
+    calendarView==="week"
+    ? document.getElementById("weekCalendar")
+    : document.getElementById("dayCalendar");
+
+  if(!scroll)return;
+
+  const now=new Date();
+
+  const target=
+    Math.max(
+      0,
+      now.getHours()*60-180
+    );
+
+  scroll.scrollTop=target;
+}
+
+
+/* =====================================================
+   EVENT MODAL
+===================================================== */
+
+function openEventModal(date=null,id=null,start=null,end=null){
 
   editingEventId=id;
 
-  const modal=
-    document.getElementById("eventModal");
+  const modal=document.getElementById("eventModal");
 
   const deleteButton=
     document.getElementById("deleteEventButton");
 
   if(id){
 
-    const event=
-      events.find(e=>e.id===id);
+    const event=events.find(e=>e.id===id);
 
     if(!event)return;
 
     document.getElementById("modalTitle")
       .textContent="✏️ 予定を編集";
 
-    document.getElementById("eventName")
-      .value=event.name;
+    document.getElementById("eventName").value=event.name;
+    document.getElementById("eventDate").value=event.date;
+    document.getElementById("eventStart").value=event.start;
+    document.getElementById("eventEnd").value=event.end;
 
-    document.getElementById("eventDate")
-      .value=event.date;
-
-    document.getElementById("eventStart")
-      .value=event.start;
-
-    document.getElementById("eventEnd")
-      .value=event.end;
+    selectedEventColor=event.color||settings.accent;
 
     deleteButton.style.display="block";
 
@@ -1506,31 +2094,54 @@ function openEventModal(date=null,id=null){
     document.getElementById("modalTitle")
       .textContent="＋ 予定を追加";
 
-    const targetDate=
+    document.getElementById("eventName").value="";
+
+    document.getElementById("eventDate").value=
       date || dateKey(new Date());
 
-    document.getElementById("eventName")
-      .value="";
+    document.getElementById("eventStart").value=
+      start || "09:00";
 
-    document.getElementById("eventDate")
-      .value=targetDate;
+    document.getElementById("eventEnd").value=
+      end || "10:00";
 
-    document.getElementById("eventStart")
-      .value="09:00";
-
-    document.getElementById("eventEnd")
-      .value="10:00";
+    selectedEventColor=settings.accent;
 
     deleteButton.style.display="none";
   }
 
+  updateColorButtons();
+
   modal.classList.add("show");
+
+  setTimeout(()=>{
+    document.getElementById("eventName").focus();
+  },50);
+}
+
+function updateColorButtons(){
+
+  document.querySelectorAll(".color-option")
+    .forEach(button=>{
+
+      button.classList.toggle(
+        "selected",
+        button.dataset.color===selectedEventColor
+      );
+
+    });
+}
+
+function selectEventColor(color){
+
+  selectedEventColor=color;
+
+  updateColorButtons();
 }
 
 function closeEventModal(){
 
-  document
-    .getElementById("eventModal")
+  document.getElementById("eventModal")
     .classList.remove("show");
 
   editingEventId=null;
@@ -1551,19 +2162,24 @@ function saveEvent(){
     document.getElementById("eventEnd").value;
 
   if(!name){
+
     alert("予定の名前を入力してください");
+
     return;
   }
 
-  if(!date || !start || !end){
+  if(!date||!start||!end){
+
     alert("日付と時間を入力してください");
+
     return;
   }
 
   if(editingEventId){
 
-    const event=
-      events.find(e=>e.id===editingEventId);
+    const event=events.find(
+      e=>e.id===editingEventId
+    );
 
     if(event){
 
@@ -1571,25 +2187,33 @@ function saveEvent(){
       event.date=date;
       event.start=start;
       event.end=end;
+      event.color=selectedEventColor;
     }
 
   }else{
 
     events.push({
-      id:Date.now(),
-      name,
-      date,
-      start,
-      end
-    });
 
+      id:Date.now(),
+
+      name,
+
+      date,
+
+      start,
+
+      end,
+
+      color:selectedEventColor
+
+    });
   }
 
   saveEvents();
 
   closeEventModal();
 
-  renderSchedule();
+  renderCalendar();
 }
 
 function deleteEditingEvent(){
@@ -1600,16 +2224,15 @@ function deleteEditingEvent(){
     return;
   }
 
-  events=
-    events.filter(
-      e=>e.id!==editingEventId
-    );
+  events=events.filter(
+    e=>e.id!==editingEventId
+  );
 
   saveEvents();
 
   closeEventModal();
 
-  renderSchedule();
+  renderCalendar();
 }
 
 function saveEvents(){
@@ -1620,10 +2243,16 @@ function saveEvents(){
   );
 }
 
+function timeToMinutes(time){
+
+  const parts=time.split(":").map(Number);
+
+  return parts[0]*60+parts[1];
+}
+
 function escapeHTML(text){
 
-  const div=
-    document.createElement("div");
+  const div=document.createElement("div");
 
   div.textContent=text;
 
@@ -1632,7 +2261,7 @@ function escapeHTML(text){
 
 
 /* =====================================================
-   タイマー
+   TIMER
 ===================================================== */
 
 let timerSeconds=300;
@@ -1640,16 +2269,12 @@ let timerInterval=null;
 
 function updateTimer(){
 
-  const m=
-    Math.floor(timerSeconds/60);
+  const m=Math.floor(timerSeconds/60);
+  const s=timerSeconds%60;
 
-  const s=
-    timerSeconds%60;
-
-  document.getElementById("timerDisplay")
-    .textContent=
-      `${String(m).padStart(2,"0")}:`+
-      `${String(s).padStart(2,"0")}`;
+  document.getElementById("timerDisplay").textContent=
+    `${String(m).padStart(2,"0")}:`+
+    `${String(s).padStart(2,"0")}`;
 }
 
 function setTimer(seconds){
@@ -1665,45 +2290,39 @@ function customTimer(){
 
   pauseTimer();
 
-  const min=
-    parseInt(
-      document.getElementById("timerMin").value
-    )||0;
+  const min=parseInt(
+    document.getElementById("timerMin").value
+  )||0;
 
-  const sec=
-    parseInt(
-      document.getElementById("timerSec").value
-    )||0;
+  const sec=parseInt(
+    document.getElementById("timerSec").value
+  )||0;
 
-  timerSeconds=
-    min*60+sec;
+  timerSeconds=Math.max(0,min*60+sec);
 
   updateTimer();
 }
 
 function startTimer(){
 
-  if(timerInterval || timerSeconds<=0){
-    return;
-  }
+  if(timerInterval||timerSeconds<=0)return;
 
-  timerInterval=
-    setInterval(()=>{
+  timerInterval=setInterval(()=>{
 
-      timerSeconds--;
+    timerSeconds--;
 
-      updateTimer();
+    updateTimer();
 
-      if(timerSeconds<=0){
+    if(timerSeconds<=0){
 
-        pauseTimer();
+      pauseTimer();
 
-        alert("⏰ タイマー終了！");
+      alert("⏰ タイマー終了！");
 
-        beep();
-      }
+      beep();
+    }
 
-    },1000);
+  },1000);
 }
 
 function pauseTimer(){
@@ -1724,7 +2343,7 @@ function resetTimer(){
 
 
 /* =====================================================
-   ストップウォッチ
+   STOPWATCH
 ===================================================== */
 
 let stopwatchElapsed=0;
@@ -1733,19 +2352,15 @@ let stopwatchInterval=null;
 
 function updateStopwatch(){
 
-  const sec=
-    Math.floor(stopwatchElapsed/1000);
+  const sec=Math.floor(stopwatchElapsed/1000);
 
-  const ms=
-    Math.floor(
-      (stopwatchElapsed%1000)/10
-    );
+  const ms=Math.floor(
+    (stopwatchElapsed%1000)/10
+  );
 
-  const min=
-    Math.floor(sec/60);
+  const min=Math.floor(sec/60);
 
-  const seconds=
-    sec%60;
+  const seconds=sec%60;
 
   document.getElementById("stopwatchDisplay")
     .textContent=
@@ -1761,15 +2376,14 @@ function startStopwatch(){
   stopwatchStart=
     Date.now()-stopwatchElapsed;
 
-  stopwatchInterval=
-    setInterval(()=>{
+  stopwatchInterval=setInterval(()=>{
 
-      stopwatchElapsed=
-        Date.now()-stopwatchStart;
+    stopwatchElapsed=
+      Date.now()-stopwatchStart;
 
-      updateStopwatch();
+    updateStopwatch();
 
-    },10);
+  },10);
 }
 
 function pauseStopwatch(){
@@ -1785,38 +2399,40 @@ function resetStopwatch(){
 
   stopwatchElapsed=0;
 
-  document.getElementById("laps")
-    .innerHTML="";
+  document.getElementById("laps").innerHTML="";
 
   updateStopwatch();
 }
 
 function lapStopwatch(){
 
-  const div=
-    document.createElement("div");
+  const div=document.createElement("div");
 
   div.className="lap";
 
   div.innerHTML=
     `<span>ラップ</span>`+
-    `<strong>`+
-    `${document.getElementById("stopwatchDisplay").textContent}`+
-    `</strong>`;
+    `<strong>${
+      document.getElementById("stopwatchDisplay").textContent
+    }</strong>`;
 
-  document.getElementById("laps")
-    .prepend(div);
+  document.getElementById("laps").prepend(div);
 }
 
 
 /* =====================================================
-   アラーム
+   ALARM
 ===================================================== */
 
-let alarms=
-  JSON.parse(
+let alarms=[];
+
+try{
+  alarms=JSON.parse(
     localStorage.getItem("timebox_alarms")||"[]"
   );
+}catch(e){
+  alarms=[];
+}
 
 function saveAlarms(){
 
@@ -1832,14 +2448,20 @@ function addAlarm(){
     document.getElementById("alarmTime").value;
 
   if(!time){
+
     alert("時刻を選んでください");
+
     return;
   }
 
   alarms.push({
+
     id:Date.now(),
+
     time,
+
     enabled:true
+
   });
 
   saveAlarms();
@@ -1878,37 +2500,30 @@ function renderAlarms(){
 
   list.innerHTML="";
 
-  alarms.forEach(alarm=>{
+  alarms
+    .sort((a,b)=>a.time.localeCompare(b.time))
+    .forEach(alarm=>{
 
-    const div=
-      document.createElement("div");
+      const div=document.createElement("div");
 
-    div.className="alarm";
+      div.className="alarm";
 
-    div.innerHTML=
-      `<div>
-        <div class="alarm-time">
-          ${alarm.time}
+      div.innerHTML=
+        `<div>
+          <div class="alarm-time">${alarm.time}</div>
+          <small>${alarm.enabled?"ON":"OFF"}</small>
         </div>
-        <small>
-          ${alarm.enabled?"ON":"OFF"}
-        </small>
-      </div>
+        <div>
+          <button onclick="toggleAlarm(${alarm.id})">
+            ${alarm.enabled?"OFF":"ON"}
+          </button>
+          <button onclick="deleteAlarm(${alarm.id})">
+            削除
+          </button>
+        </div>`;
 
-      <div>
-        <button
-          onclick="toggleAlarm(${alarm.id})">
-          ON/OFF
-        </button>
-
-        <button
-          onclick="deleteAlarm(${alarm.id})">
-          削除
-        </button>
-      </div>`;
-
-    list.appendChild(div);
-  });
+      list.appendChild(div);
+    });
 }
 
 let lastAlarm="";
@@ -1927,15 +2542,13 @@ function checkAlarms(){
 
   alarms.forEach(alarm=>{
 
-    if(
-      alarm.enabled &&
-      alarm.time===current
-    ){
+    if(alarm.enabled&&alarm.time===current){
 
       alert("⏰ アラーム："+current);
 
       beep();
     }
+
   });
 }
 
@@ -1943,13 +2556,18 @@ setInterval(checkAlarms,1000);
 
 
 /* =====================================================
-   世界時計
+   WORLD CLOCK
 ===================================================== */
 
-let worldClocks=
-  JSON.parse(
+let worldClocks=[];
+
+try{
+  worldClocks=JSON.parse(
     localStorage.getItem("timebox_world")||"[]"
   );
+}catch(e){
+  worldClocks=[];
+}
 
 function addWorldClock(){
 
@@ -1959,13 +2577,9 @@ function addWorldClock(){
   const zone=select.value;
 
   const name=
-    select.options[
-      select.selectedIndex
-    ].text;
+    select.options[select.selectedIndex].text;
 
-  if(
-    worldClocks.some(x=>x.zone===zone)
-  ){
+  if(worldClocks.some(x=>x.zone===zone)){
     return;
   }
 
@@ -1985,9 +2599,7 @@ function addWorldClock(){
 function removeWorldClock(zone){
 
   worldClocks=
-    worldClocks.filter(
-      x=>x.zone!==zone
-    );
+    worldClocks.filter(x=>x.zone!==zone);
 
   localStorage.setItem(
     "timebox_world",
@@ -2006,8 +2618,7 @@ function renderWorld(){
 
   worldClocks.forEach(x=>{
 
-    const div=
-      document.createElement("div");
+    const div=document.createElement("div");
 
     div.className="world";
 
@@ -2015,14 +2626,11 @@ function renderWorld(){
       x.zone.replace(/[^a-z0-9]/gi,"");
 
     div.innerHTML=
-      `<div>${x.name}</div>
-       <div
-         class="world-time"
-         id="world_${safeId}">
+      `<div>${escapeHTML(x.name)}</div>
+       <div class="world-time" id="world_${safeId}">
          --:--:--
        </div>
-       <button
-         onclick="removeWorldClock('${x.zone}')">
+       <button onclick="removeWorldClock('${x.zone}')">
          ×
        </button>`;
 
@@ -2040,8 +2648,7 @@ function updateWorld(){
       "world_"+
       x.zone.replace(/[^a-z0-9]/gi,"");
 
-    const el=
-      document.getElementById(id);
+    const el=document.getElementById(id);
 
     if(!el)return;
 
@@ -2062,21 +2669,18 @@ setInterval(updateWorld,1000);
 
 
 /* =====================================================
-   音
+   SOUND
 ===================================================== */
 
 function beep(){
 
   try{
 
-    const ctx=
-      new AudioContext();
+    const ctx=new AudioContext();
 
-    const osc=
-      ctx.createOscillator();
+    const osc=ctx.createOscillator();
 
-    const gain=
-      ctx.createGain();
+    const gain=ctx.createGain();
 
     osc.connect(gain);
 
@@ -2101,16 +2705,14 @@ function beep(){
 
 
 /* =====================================================
-   データ削除
+   CLEAR DATA
 ===================================================== */
 
 function clearAllData(){
 
-  if(
-    !confirm(
-      "予定・アラーム・世界時計などの保存データを削除しますか？"
-    )
-  ){
+  if(!confirm(
+    "予定・アラーム・世界時計などの保存データを削除しますか？"
+  )){
     return;
   }
 
@@ -2122,14 +2724,36 @@ function clearAllData(){
   alarms=[];
   worldClocks=[];
 
-  renderSchedule();
+  renderCalendar();
   renderAlarms();
   renderWorld();
 }
 
 
 /* =====================================================
-   起動
+   MODAL CLOSE
+===================================================== */
+
+document.getElementById("eventModal")
+  .addEventListener("click",e=>{
+
+    if(e.target.id==="eventModal"){
+      closeEventModal();
+    }
+
+  });
+
+document.addEventListener("keydown",e=>{
+
+  if(e.key==="Escape"){
+    closeEventModal();
+  }
+
+});
+
+
+/* =====================================================
+   START
 ===================================================== */
 
 loadSettings();
@@ -2144,7 +2768,7 @@ renderAlarms();
 
 renderWorld();
 
-renderSchedule();
+renderCalendar();
 
 </script>
 
